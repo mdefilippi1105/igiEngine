@@ -13,7 +13,7 @@ namespace VideoRecorder.Controllers;
 
 /***************************************************************************
  * IAction is the interface that represents whatever controller action sends
- * back to the browser. Its an interface
+ * back to the browser. It is an interface
  * class inherits everything from .NET controller class
  ***************************************************************************/
 
@@ -22,10 +22,12 @@ public class CameraController : Controller
 {
     //var to hold the database connection
     private readonly VideoRecorderContext _context;
+    private readonly AltOnvifDiscovery _discovery;
 
-    public CameraController(VideoRecorderContext context)
+    public CameraController(VideoRecorderContext context, AltOnvifDiscovery discovery)
     {
         _context = context;
+        _discovery = discovery;
     }
 
     
@@ -179,14 +181,50 @@ public class CameraController : Controller
         {
             var discovery = new AltOnvifDiscovery();
             await discovery.DiscoverAsync();
-            
+            await SaveDiscoveredCameras(discovery.OnvifUriList!);
             return Json(discovery.OnvifUriList);
+            
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
+            return Json(e.Message);
             return Json(new List<DiscoveryDevice>());
         }
+    }
+    
+    
+    public async Task SaveDiscoveredCameras(List<string> rtspUrls)
+    {
+        foreach (var rtspUrl in rtspUrls)
+        {
+            var uri = new Uri(rtspUrl);
+            var userInfo = uri.UserInfo.Split(':');
+
+            var camera = new Camera.Camera
+            {
+                Name = uri.Host,
+                RtspUrl = rtspUrl,
+                Scheme = uri.Scheme,
+                Host = uri.Host,
+                Port = uri.Port,
+                Path = uri.AbsolutePath,
+
+                // if the array has 1 element, take the first one: username
+                // if the array has atleast 2 elements, take the second one: password
+                // the reason for this is if there is no user creds in the string
+                // so splitting on ":" with empty string will get IndexOutOfBounds
+                Username = userInfo.Length > 0 ? userInfo[0] : null,
+                Password = userInfo.Length > 1 ? userInfo[1] : null,
+
+                IsEnabled = true,
+                CreatedAt = DateTime.Now,
+            };
+            
+            
+            _context.Camera.Add(camera);
+        }
+        await _context.SaveChangesAsync();
     }
 
     

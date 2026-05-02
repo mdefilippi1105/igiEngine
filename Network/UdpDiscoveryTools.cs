@@ -65,7 +65,10 @@ public class UdpDiscoveryTools {
                             </Envelope>
                             """;
         
+        DisplayCurrentPort();
+        
         byte[] data = Encoding.UTF8.GetBytes(probe);
+        Console.WriteLine($"Sending UDP ON PORT: {port}");
         
         // we are sending 5 discovery packets. we can change this later if need be.
         for (int i = 0; i < 5; i++)
@@ -79,13 +82,17 @@ public class UdpDiscoveryTools {
     public static List<string> ReceiveResponse()
     {
         var results = new List<string>();
-        socket.Client.ReceiveTimeout = 10000; // this is 10 seconds, it may have to be adjusted
+        socket.Client.ReceiveTimeout = 5000; // this is 10 seconds, it may have to be adjusted
         try
         {
             while (true)
             {
                 var endpoint = new IPEndPoint(IPAddress.Any, 0);
-                byte[] reply = socket.Receive(ref endpoint);
+                
+                //this does 2 things: block until udp packet arrives
+                //then, write the senders ip into endpoint
+                socket.Receive(ref endpoint);
+                
                 var ipString = endpoint.Address.ToString();
                 
                 //if the list has the string already don't re-add as a duplicate

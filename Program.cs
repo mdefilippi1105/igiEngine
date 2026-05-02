@@ -7,6 +7,9 @@ using VideoRecorder.Database;
 using VideoRecorder.Services;
 
 
+
+
+    //DONE: Convert discovered onvif into URI object + save to db
     //TODO: Utilize IDisposable to clean up streams
     //DONE: lower buffering > over 10sec
     //DONE: when deleting camera, confirm y or n?
@@ -31,17 +34,14 @@ using VideoRecorder.Services;
 
     var builder = WebApplication.CreateBuilder(args);
 
-    builder.Services.AddControllersWithViews(); // tell the app we want controllers and MVC
+    // tell the app we want controllers and MVC
+    builder.Services.AddControllersWithViews(); 
 
     //register the db so controllers can use it
     builder.Services.AddDbContext<VideoRecorderContext>(options =>
        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")) ); 
 
-
-
-
-
-
+    //add cookie auth stuff
     builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme) // set up cookie auth
         .AddCookie(options =>
         {
@@ -51,6 +51,9 @@ using VideoRecorder.Services;
             options.SlidingExpiration = true;
 
         });
+    
+    // create one instance of this class per HTTP request and then destroy it
+    builder.Services.AddScoped<AltOnvifDiscovery>();
 
     var app = builder.Build(); //build it
 
