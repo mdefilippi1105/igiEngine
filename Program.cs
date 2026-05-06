@@ -9,6 +9,8 @@ using VideoRecorder.Services;
 
 
 
+
+    //TODO: Convert comments to <param> style
     //DONE: Convert discovered onvif into URI object + save to db
     //TODO: Utilize IDisposable to clean up streams
     //DONE: lower buffering > over 10sec
@@ -19,7 +21,7 @@ using VideoRecorder.Services;
     //DONE: fix or delete Stream.ProcessChecker()
     //DONE: create camera guid per stream 
     //DONE: make sure no 2 of the same ffmpeg process running (implement camera guid)
-    //TODO: discovered devices: remove duplicates
+    //DONE: discovered devices: remove duplicates
     //TODO: discovered devices: clear devices button (maybe add these to a list<>())
     //TODO: discovered devices: show mac address
     //TODO: discovered devices: highlight devices that are actually network cams

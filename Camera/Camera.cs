@@ -34,6 +34,8 @@ public class Camera
     [Display(Name = "ENABLED")]
     public bool IsEnabled { get; set; }
     
+    public bool IsOnvif { get; set; }
+    
     public DateTime CreatedAt { get; set; }
     
     

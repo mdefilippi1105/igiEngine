@@ -20,7 +20,7 @@ public class AltOnvifDiscovery
 
     public List<string>? OnvifUriList { get; set; } = new();
     
-    public async Task DiscoverAsync()
+    public async Task DiscoverAsync(string username, string password)
     {
         var discovery = new Discovery();
         var cancellationToken = new CancellationTokenSource().Token;
@@ -34,7 +34,7 @@ public class AltOnvifDiscovery
                 //create the Media client. this includes SOAP binding,
                 //gets the media service URL by requesting cams capabilities
                 //create the end point
-                var media = await OnvifClientFactory.CreateMediaClientAsync(device.Address, "root", "pass");
+                var media = await OnvifClientFactory.CreateMediaClientAsync(device.Address, username, password);
             
                 
                 //ask cam for list of stream profiles

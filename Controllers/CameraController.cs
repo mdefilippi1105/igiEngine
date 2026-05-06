@@ -175,12 +175,12 @@ public class CameraController : Controller
     * or if the issue is a bug in the library.
     ************************************************************************/
 
-    public async Task<IActionResult> Discover()
+    public async Task<IActionResult> Discover(string username, string password)
     {
         try
         {
             var discovery = new AltOnvifDiscovery();
-            await discovery.DiscoverAsync();
+            await discovery.DiscoverAsync(username, password);
             await SaveDiscoveredCameras(discovery.OnvifUriList!);
             return Json(discovery.OnvifUriList);
             
@@ -200,9 +200,11 @@ public class CameraController : Controller
         {
             var uri = new Uri(rtspUrl);
             var userInfo = uri.UserInfo.Split(':');
+            
 
             var camera = new Camera.Camera
             {
+                IsOnvif =  true,
                 Name = uri.Host,
                 RtspUrl = rtspUrl,
                 Scheme = uri.Scheme,
