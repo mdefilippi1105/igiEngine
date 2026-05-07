@@ -35,10 +35,29 @@ public class CameraController : Controller
     * this is the method that runs when someone visits /camera
     * async means it can wait for db without freezing app
     ***************************************************************************/
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string sortBy = "Name")
     {
-        var cameras = await _context.Camera.ToListAsync(); // fetch all cams and store to cameras.
-
+        // fetch all cams and store to cameras.
+        List<Camera.Camera> cameras = await _context.Camera.ToListAsync();
+        
+        // self-explanatory sory logic
+        if (sortBy == "Description")
+        {
+            cameras = cameras.OrderBy(c => c.Description).ToList();
+        }
+        else if (sortBy == "IsEnabled")
+        {
+            cameras = cameras.Where(c => c.IsEnabled).ToList();
+        }
+        else
+        {
+            cameras = cameras.OrderBy(c => c.Name).ToList();
+        }
+        
+        // listed as blank because we do not want
+        // to apply a default sortBy. this allows the sort form to show 
+        // the placeholder properly.    
+        ViewData["sortBy"] = sortBy;
         return View(cameras); // send list of cams to index to be displayed
     }
 
@@ -295,6 +314,8 @@ public class CameraController : Controller
         DevicePingTools.AddressResolution();
         return Json(DevicePingTools.AddressResolution());
     }
+    
+    
     
     
 }    

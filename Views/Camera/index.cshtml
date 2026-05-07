@@ -22,6 +22,27 @@
             border-bottom:1px solid #1e2550;
             margin:0;">Cameras</p>
         
+        @* here is the sort drop-down. we can add more sort options as we go. *@
+        <td>
+            <form method="get">
+                <p style="color:#c4c4f3; margin-bottom:4px;">Sort by</p>
+                <select name="sortBy" onchange="this.form.submit()"
+                        style="background:#1e2550; 
+                border:1px solid #330860; 
+                color:#fafafa; 
+                border-radius:4px; 
+                padding:4px 8px;
+                width:136px";
+                    
+                    > class="btn btn-sm btn-ffx"
+                    <option value="" disabled selected style="color:#888;">Sort by...</option>
+                    <option value="Name" selected="@(ViewData["sortBy"] as string == "Name")">Name</option>
+                    <option value="Description" selected="@(ViewData["sortBy"] as string == "Description")">Description</option>
+                    <option value="IsEnabled" selected="@(ViewData["sortBy"] as string == "IsEnabled")">Enabled</option>
+                </select>
+            </form>
+        </td>
+        
         
         <!--Add Camera button -->
         <a asp-action="Create"
@@ -36,7 +57,7 @@
                   data-placement="top"
                   title="Tooltip on top">
            <i class="bi bi-plus-circle-fill fs-3"></i>
-           Add Cam Config
+           Add RTSP Link
         </a>
         
         
@@ -83,7 +104,10 @@
         <input type="hidden" id="cameraIdInput" name="id" value=""/>
     </form>
     
+    
     @************************TABLE HEADERS*************** *@
+    @* this is the sort form *@
+
     <table class= "table table-striped table-dark table-hover">
         <thead class="table-dark">
         <tr>
@@ -104,6 +128,9 @@
                         loop through every camera and display in a row 
                             add a button next to each entry 
         *************************************************************************@
+        
+
+        
         @foreach (var camera in Model)
         {
             <tr>
@@ -111,6 +138,10 @@
                 <td>@camera.Name</td>
                 <td>@camera.Description</td>
                 <td>@(camera.IsEnabled ? "Yes" : "No")</td>
+                
+                
+                @* this creates a badge based on how the device was added. *@
+                @* i will add more protocol badges as time goes on. *@
                 <td>
                     @if (camera.RtspUrl.Contains("onvif"))
                     {
