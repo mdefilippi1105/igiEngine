@@ -22,43 +22,57 @@
         </div>
     </div>
     
-    @* asp-action= "Create" tells the form to POST to /Camera/Create *@
-    <form asp-action="AddCamera">
+    @* asp-action= "AddCamera" tells the form to POST to /Camera/Create *@
+    <form asp-action="AddCamera" autocomplete="off">
         
         @* Name field *@
-        <div class="mb-3 text-white">
+        <div class="mb-3 ">
             <label asp-for="Name" class="form-label"></label>
-            <input asp-for="Name" class="form-control w-50"/>
+            <input asp-for="Name" class="form-control" style="width: 180px;"/>
         </div>
         
         @*Description Field*@
-        <div class="mb-3 text-white">
+        <div class="mb-3 ">
             <label asp-for="Description" class="form-label"></label>
-            <input asp-for="Description" class="form-control w-50" />
+            <input asp-for="Description" class="form-control" style="width: 180px;" />
         </div>
         
         @* Host field *@
-        <div class="mb-3 text-white">
+        <div class="mb-3 ">
             <label asp-for="Host" class="form-label"></label>
-            <input asp-for="Host" class="form-control w-50" />
+            <input asp-for="Host" class="form-control" style="width: 180px;" />
         </div>
 
         @* Port Field *@
         <div class="mb-3">
             <label asp-for="Port" class="form-label"></label>
-            <input asp-for="Port" class="form-control w-25" type="number" />
+            <input asp-for="Port" class="form-control" style="width: 100px;" type="number" />
         </div>
         
         @* Username field *@
         <div class="mb-3 text-white">
             <label asp-for="Username" class="form-label"></label>
-            <input asp-for="Username" class="form-control w-25" />
+            <input asp-for="Username" class="form-control" style="width: 100px;"/>
         </div>
         
         @* Password field *@
         <div class="mb-3 text-white">
             <label asp-for="Password" class="form-label"></label>
-            <input asp-for="Password" class="form-control w-25" />
+            <input asp-for="Password" class="form-control" style="width: 100px;" />
+        </div>
+        
+        
+        @* drop down menu for cam manufacturers *@
+        <div class="mb-3">
+            <label asp-for="Manufacturer" class="form-label "></label>
+            <select asp-for="Manufacturer" class="form-select" style="width: 140px;">
+                <option value=""></option>
+                <option value="axis">Axis</option>
+                <option value="hikvision">Hikvision</option>
+                <option value="dahua">Dahua</option>
+                <option value="vivotek">Vivotek</option>
+                <option value="hanwha">Hanwha</option>
+            </select>
         </div>
 
         

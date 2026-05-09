@@ -101,6 +101,10 @@ public class CameraController : Controller
     [HttpPost]
     public async Task<IActionResult> AddCamera(Camera.Camera camera)
     {
+        if (ManufacturerTable.DefaultRtspPaths.ContainsKey(camera.Manufacturer!))
+        {
+            camera.Path = ManufacturerTable.DefaultRtspPaths[camera.Manufacturer!];
+        }
         if (ModelState.IsValid) // check data validation
         {
             _context.Add(camera); // add cam to database context
