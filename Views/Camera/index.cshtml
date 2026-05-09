@@ -43,8 +43,23 @@
             </form>
         </td>
         
-        
         <!--Add Camera button -->
+        <a asp-action="AddCamera"
+           class="btn btn-sm btn-ffx"
+           style="background:#1e2550; 
+                  border:1px solid #330860; 
+                  color:#fafafa;
+                  display:flex; 
+                  align-items:center; 
+                  gap:8px;"
+           data-toggle="tooltip"
+           data-placement="top"
+           title="Tooltip on top">
+            <i class="bi bi-plus-circle-fill fs-3"></i>
+            Add Camera
+        </a>
+        
+        <!--Add RTSP -->
         <a asp-action="Create"
            class="btn btn-sm btn-ffx"
            style="background:#1e2550; 
@@ -56,8 +71,8 @@
                   data-toggle="tooltip"
                   data-placement="top"
                   title="Tooltip on top">
-           <i class="bi bi-plus-circle-fill fs-3"></i>
-           Add RTSP Link
+            <i class="bi bi-plus-circle-fill fs-3"></i>
+            Add via RTSP
         </a>
         
         
@@ -73,7 +88,7 @@
             data-bs-toggle="modal"
             data-bs-target="#discoverModal">
             <i class="bi bi-broadcast fs-3"></i>
-            Discover Cameras
+            Add via WDS
         </a>
         
         <!-- Onvif Button    -->
@@ -88,7 +103,7 @@
             data-bs-toggle="modal"
             data-bs-target="#discoverModalOnvif">
             <i class="bi bi-camera-reels"></i>
-            Discover ONVIF
+            Add via ONVIF
         </a>
 
     </div>
@@ -129,8 +144,6 @@
                             add a button next to each entry 
         *************************************************************************@
         
-
-        
         @foreach (var camera in Model)
         {
             <tr>
@@ -142,13 +155,16 @@
                 
                 @* this creates a badge based on how the device was added. *@
                 @* i will add more protocol badges as time goes on. *@
+                @* RtspUrl?.ToLower().Contains converts the text to lower and then runs a check *@
                 <td>
-                    @if (camera.RtspUrl.Contains("onvif"))
+                    @if (camera.RtspUrl != null 
+                              && camera.RtspUrl?.ToLower().Contains("onvif") == true)
                     {
                         <span style="color: #c4c4f3; background: transparent;border: 1px solid #c4c4f3; font-family: 'Courier New', monospace;" class="badge">ONVIF</span> 
                     }
 
-                    else
+                    else if (camera.RtspUrl != null 
+                            && camera.RtspUrl?.ToLower().Contains("rtsp") == true)
                     {
                         <span style="color: #fa8080; background: transparent;border: 1px solid #FA8080FF; font-family: 'Courier New', monospace;" class="badge ">RTSP</span>
                     }
@@ -249,7 +265,6 @@
     @*************************************************************************
                             javascript
     *************************************************************************@
-    
     
     @* 
     Javascript for the modal 

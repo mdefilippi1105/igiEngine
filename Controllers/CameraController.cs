@@ -54,9 +54,8 @@ public class CameraController : Controller
             cameras = cameras.OrderBy(c => c.Name).ToList();
         }
         
-        // listed as blank because we do not want
         // to apply a default sortBy. this allows the sort form to show 
-        // the placeholder properly.    
+        // the placeholder properly.
         ViewData["sortBy"] = sortBy;
         return View(cameras); // send list of cams to index to be displayed
     }
@@ -93,7 +92,30 @@ public class CameraController : Controller
 
         return View(camera);
     }
-    
+    [HttpGet]
+    public IActionResult AddCamera()
+    {
+        return View(); //show the cshtml
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddCamera(Camera.Camera camera)
+    {
+        if (ModelState.IsValid) // check data validation
+        {
+            _context.Add(camera); // add cam to database context
+
+            await _context.SaveChangesAsync(); // save to the db
+            TempData["Success"] = "Camera saved!";
+            return RedirectToAction(nameof(Index)); // after saving, send user back to cam list page
+        }
+        else
+        {
+            TempData["Error"] = "Could not add camera.";
+        }
+
+        return View(camera);
+    }
     
     // delete the camera
     public async Task<IActionResult> RemoveCamera(Guid id)
