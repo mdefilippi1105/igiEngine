@@ -32,8 +32,9 @@
                 color:#fafafa; 
                 border-radius:4px; 
                 padding:4px 8px;
-                width:136px">
-                     class="btn btn-sm btn-ffx"
+                width:136px";
+                    
+                    > class="btn btn-sm btn-ffx"
                     <option value="" disabled selected style="color:#888;">Sort by...</option>
                     <option value="Name" selected="@(ViewData["sortBy"] as string == "Name")">Name</option>
                     <option value="Description" selected="@(ViewData["sortBy"] as string == "Description")">Description</option>
@@ -166,6 +167,10 @@
                             && camera.RtspUrl?.ToLower().Contains("rtsp") == true)
                     {
                         <span style="color: #fa8080; background: transparent;border: 1px solid #FA8080FF; font-family: 'Courier New', monospace;" class="badge ">RTSP</span>
+                    }
+                    else if (camera.Manufacturer != null)
+                    {
+                        <span style="color: #64d01c; background: transparent;border: 1px solid #64d01c; font-family: 'Courier New', monospace;" class="badge ">TEST</span>
                     }
                 </td>
                 

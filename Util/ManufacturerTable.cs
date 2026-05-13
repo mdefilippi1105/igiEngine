@@ -9,5 +9,6 @@ public static class ManufacturerTable
         { "networkcamera", "/live.sdp" },
         { "hikvision", "/Streaming/Channels/101" },
         { "dahua", "/cam/realmonitor?channel=1&subtype=0" },
+        { "panasonic", "/MediaInput/h264"}
     };
 }

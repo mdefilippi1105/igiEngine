@@ -8,7 +8,7 @@ using Rtsp;
 using Rtsp.Messages;
 
 
-public class StreamListener
+public class StreamListener : IDisposable
 {
     // these are nullable by default
     private RtspTcpTransport? _tcpSocket;
@@ -18,53 +18,66 @@ public class StreamListener
     private string? _password;
     private bool _attemptedAuth = false;
     private bool _notNull;
+    private bool _setupSent = false;
     private string? _sessionId;
     private string? _authHeader;
     
     /************************************************************
-     * This is a console version that ties all of these together.
+     * This ties all of these together.
      * At some point, if all testing is passed, I will try
-     * to implement this on igi engine
+     * to implement this on igi engine.
+     * 
      ************************************************************/
     public void RunStreaming(string target, string username, string password)
     {
-        var s = new StreamListener();
-        s.ClientConnect(target, username, password);
-        s.StartListening();
-        s.SendOptions();
-        s.SendDescription();
+        ClientConnect(target, username, password);
+        StartListening();
+        SendOptions();
+        SendDescription();
         Console.ReadLine();
 
-        Console.WriteLine("Press any key to exit.");
-        Console.ReadLine();
     }
     
-    /**********************************************************
+    /*******************************************************************************
      * create a new socket that we connect to
      * this would be considered the rtsp server
      * in this case, it would be an ip cam
      * IMPORTANT: Some Rtsp url strings don't contain a port
-     * 
-     **********************************************************/
+     * for new Uri() to parse cleanly, you need a full URI string in this format:
+     * rtsp://username:password@192.168.1.202:554/axis-media/media.amp
+     ******************************************************************************/
     void ClientConnect(string url, string username, string password)
     {
+        Dispose();
+        
         _username = username;
         _password = password;
         
+        // create a URI object with the supplied URL
         var uri = new Uri(url);
         int port;
-        if (uri.Port == -1)
+        if (uri.Port == -1) // check if the URL has no explicit port specified
             port = 554;
         else
             port = uri.Port;
         
+        //test
+        Console.WriteLine(uri.AbsolutePath);
+        Console.WriteLine(uri.AbsoluteUri);
+        Console.WriteLine(uri.Host);
+        Console.WriteLine(uri.Scheme);
+        Console.WriteLine(uri.UserInfo);
+        Console.WriteLine(uri.Port.ToString());
+        
         
         var builder = new UriBuilder(uri);
         builder.Port = port;
-
+        
         var uriWithPort = builder.Uri;
         _url = uriWithPort.ToString();
         
+        // Creates a standard socket
+        // This just opens the pipe. 
         _tcpSocket = new RtspTcpTransport(uriWithPort);
 
        if (!_tcpSocket.Connected)
@@ -81,7 +94,7 @@ public class StreamListener
      * from ClientConnect().
      *
      **********************************************************/
-    void StartListening()
+    private void StartListening()
     {
         if (_tcpSocket == null) 
             return;
@@ -91,7 +104,6 @@ public class StreamListener
 
         Console.WriteLine("Listener started");
     }
-    
     
     /*********************************************************
      * this method is called when cam sends back an RTSP response
@@ -122,6 +134,8 @@ public class StreamListener
      * this is for when the camera sends back a 200 - OK
      * switch -> if OK -> Send DESCRIBE
      * if OK to DESCRIBE -> Print SDP (stream info)
+     * SDP is basically a big string that lists different
+     * configurations to be used.
      **********************************************************/
     void HandleOk(RtspResponse response)
     {
@@ -132,6 +146,9 @@ public class StreamListener
                 SendDescription();
                 break;
             case RtspRequestDescribe:
+                if (_setupSent) //quick check to prevent sending double describes
+                    break;
+                _setupSent = true;
                 Console.WriteLine("I got sdp:");
                 
                 //convert the raw cam bytes into a readable string
@@ -139,21 +156,30 @@ public class StreamListener
                 Console.WriteLine(sdp);
 
                 string? controlUrl = null;
+                bool inVideoSection = false;
                 
-                
-                // split each line of the text in the SDP.
-                // SDP is the wall of text we get back from cam explaining different configs
+                // Split the chunk of text by line. The SDP has two "a=control:" lines
                 foreach (var line in sdp.Split('\n'))
                 {
-                    // this finds the video track URL in the SDP. The SDP has two "a=control:" lines
-                    // we need the URL that has "stream=0" at the end.
-                    if (line.StartsWith("a=control:") && line.Contains("stream="))
+                    if (line.StartsWith("m=video"))
+                    {
+                        inVideoSection = true;
+                        continue;
+                    }
+                    // if (line.StartsWith("a=control:") && line.Contains("stream="))
+                    if (inVideoSection && line.StartsWith("a=control:")) 
                     {
                         //yank out the "a=control:" part and remove whitespace via Trim(). we need a clean URL to send below.
-                        controlUrl = line.Replace("a=control:", "").Trim(); 
+                        controlUrl = line.Replace("a=control:", "").Trim();
                         break; 
                     }
+                    
                 }
+                
+                // leave alone if it already has URL & remove the trailing slash 
+                if (controlUrl != null && !controlUrl.StartsWith("rtsp://")) 
+                    controlUrl = _url.TrimEnd('/') + "/" + controlUrl;
+                Console.WriteLine($"Control: {controlUrl}");
                 
                 // if when parsing the SDP we find a control URL...
                 if (response.Data.Length > 0)
@@ -166,6 +192,7 @@ public class StreamListener
                 break;
             
             case RtspRequestSetup:
+                
                 Console.WriteLine("I got setup");
                 _sessionId = response.Headers["Session"];
                 Console.WriteLine($"Session ID: {_sessionId}");
@@ -179,7 +206,7 @@ public class StreamListener
      * Handling unauthorized events
      * 
      **********************************************************/
-    void HandleUnauthorize(RtspResponse response)
+    private void HandleUnauthorize(RtspResponse response)
     {
         if (_attemptedAuth) // this is false by default
         {
@@ -242,11 +269,11 @@ public class StreamListener
      * creates rtspOptions request object. asks camera what
      * RTSP options are supported.
      **********************************************************/
-    void SendOptions()
+    private void SendOptions()
     { 
         if (_rtspListener == null)
             return;
-        
+
         var options = new RtspRequestOptions();
         options.RtspUri = new Uri(_url!);
         _rtspListener.SendMessage(options);
@@ -254,11 +281,10 @@ public class StreamListener
         Console.WriteLine($"Sent message: {_url}");
     }
     
-    
     /**********************************************************
      * Send DESCRIPTION
      **********************************************************/
-    void SendDescription()
+    private void SendDescription()
     {
         if (_rtspListener == null)
             return;
@@ -269,32 +295,37 @@ public class StreamListener
         Console.WriteLine($"Sent description: {_url}");
     }
     
-    
     /**********************************************************
      * Send SETUP
      **********************************************************/
-    void SendSetup(string controlUrl)
+    private void SendSetup(string controlUrl)
     {
         {
             if (_rtspListener == null)
                 return;
             var setup = new RtspRequestSetup();
             setup.RtspUri = new Uri(controlUrl);
+            Console.WriteLine($"setup: {setup.RtspUri}");
         
             // very important. tells the camera how you want to receive the video
             // rtp/avp/tcp - send video over same tcp connection; unicast - no broadcast
             // interleaved01 - video channel 0, control signals channel 1
             setup.Headers["Transport"] = "RTP/AVP/TCP;unicast;interleaved=0-1";
+            // setup.AddTransport(new );
             
             if (_authHeader != null)
                 setup.Headers["Authorization"] = _authHeader;
         
             _rtspListener.SendMessage(setup);
         
-            Console.WriteLine($"Sent setup: {_url}");
+            Console.WriteLine($"Sent setup: {setup.RtspUri}");
         }
     }
-    void SendPlay()
+    
+    /**********************************************************
+     * Send PLAY
+     **********************************************************/
+    private void SendPlay()
     {
         if (_rtspListener == null)
             return;
@@ -307,4 +338,28 @@ public class StreamListener
         _rtspListener.SendMessage(play);
         Console.WriteLine($"Sent play: {_url}");
     }
+    
+    /**********************************************************
+     * Close down the session
+     **********************************************************/
+    public void Dispose()
+    {
+        if (_tcpSocket == null)
+            return;
+        try
+        {
+            _tcpSocket.Close();
+            GC.SuppressFinalize(this);
+            
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+        finally
+        {
+            _tcpSocket = null;
+        }
+    }
+    
 } 

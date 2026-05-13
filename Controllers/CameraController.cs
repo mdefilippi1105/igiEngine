@@ -23,13 +23,13 @@ public class CameraController : Controller
     //var to hold the database connection
     private readonly VideoRecorderContext _context;
     private readonly AltOnvifDiscovery _discovery;
+    
 
     public CameraController(VideoRecorderContext context, AltOnvifDiscovery discovery)
     {
         _context = context;
         _discovery = discovery;
     }
-
     
     /***************************************************************************
     * this is the method that runs when someone visits /camera
@@ -40,7 +40,7 @@ public class CameraController : Controller
         // fetch all cams and store to cameras.
         List<Camera.Camera> cameras = await _context.Camera.ToListAsync();
         
-        // self-explanatory sory logic
+        // self-explanatory sortby logic
         if (sortBy == "Description")
         {
             cameras = cameras.OrderBy(c => c.Description).ToList();
@@ -180,6 +180,7 @@ public class CameraController : Controller
         
         
         //safety check- if the camera stream already exists, throw an error
+        // this definitely needs work.
         if (SharedData.ActiveStreams.ContainsKey(camera.Name))
         {
             TempData["Error"] = "Camera stream already active.";
@@ -189,6 +190,58 @@ public class CameraController : Controller
         if (camera.IsEnabled)
         {
             stream.StreamDataTest(camera.RtspUrl, camera.Id);
+            SharedData.ActiveStreams[camera.Name] = streamId;
+            SharedData.StreamCount++;
+            
+            var data = SharedData.ListStreams();
+            Console.WriteLine(data);
+        }
+        
+        else
+        {
+            TempData["Error"] = "Camera is not enabled.";
+            Console.WriteLine("STREAM ERROR CAM UNENABLED");
+            return RedirectToAction(nameof(Index));
+        }
+
+        return RedirectToAction(nameof(LiveView), new { id = id });
+    }
+    
+    /***********************************************************************
+     * This is basically the same as above
+     * Instead of streaming the rtsp URL as one giant string,
+     * we put together a camera URL from the camera db objects
+     ************************************************************************/
+    
+    public IActionResult OpenCameraObjectSession(Guid id)
+    {
+        var camera = _context.Camera.Find(id);
+        var stream = new StreamVideo();
+        var streamId = $"Stream_{camera.Id}";
+        var user = camera.Username;
+        var pass =  camera.Password;
+        var ip = camera.Host;
+        var port = camera.Port;
+        var type = camera.Manufacturer;
+        
+        
+        //safety check- if the camera stream already exists, throw an error
+        // this definitely needs work.
+        if (SharedData.ActiveStreams.ContainsKey(camera.Name))
+        {
+            TempData["Error"] = "Camera stream already active.";
+            return RedirectToAction(nameof(Index));
+        }
+        
+        if (camera.IsEnabled)
+        {
+            //if the dictionary key is not found, roll over to "/live.sdp"
+            string path = ManufacturerTable.
+                DefaultRtspPaths.GetValueOrDefault(camera.Manufacturer!.ToLower(), "/live.sdp");
+
+            var url = $"rtsp://{user}:{pass}@{ip}/{path}";
+            
+            stream.StreamDataTest(url, camera.Id);
             SharedData.ActiveStreams[camera.Name] = streamId;
             SharedData.StreamCount++;
             
@@ -216,8 +269,7 @@ public class CameraController : Controller
     
     /***********************************************************************
     * Onvif library discovery method:
-    * Honestly I am not sure if its macOS socket issues
-    * or if the issue is a bug in the library.
+    * 
     ************************************************************************/
 
     public async Task<IActionResult> Discover(string username, string password)
