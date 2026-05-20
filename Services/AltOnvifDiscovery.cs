@@ -9,15 +9,13 @@ using DateTime = System.DateTime;
 
 namespace VideoRecorder.Services;
 
+
+/* The purpose of this class is to avoid hardcoding RTSP URL values
+ * Discover the cam on the network via ONVIF
+ * Ask each cam for the RTSP URL through the ONVIF media service
+ * Feed the URL into StreamListener to connect */
 public class AltOnvifDiscovery
 {
-    /*
-     * The purpose of this class is to avoid hardcoding RTSP URL values
-     * Discover the cam on the network via ONVIF
-     * Ask each cam for the RTSP URL through the ONVIF media service
-     * Feed the URL into StreamListener to connect
-     */
-
     public List<string>? OnvifUriList { get; set; } = new();
     
     public async Task DiscoverAsync(string username, string password)
@@ -27,6 +25,7 @@ public class AltOnvifDiscovery
         
         await foreach (var device in discovery.DiscoverAsync(5, cancellationToken))
         {
+            
             Console.WriteLine($"Found: {device.Mfr} {device.Model} at {device.Address}. Time is {DateTime.Now}");
             Console.WriteLine($"XAddress : {device.XAddresses.First()}");
             try

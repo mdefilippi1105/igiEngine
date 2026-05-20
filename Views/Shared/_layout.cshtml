@@ -21,7 +21,7 @@ that appears on every page: <html>, <head>, navbar, footer
 <body style="background-color: #0d1117;">
 <!-- Top navigation bar -->
 <nav class="navbar navbar-dark px-4" >
-    <a class="navbar-brand" href="/Camera"style="font-size: 1.5rem; font-family: 'Arial Black', sans-serif; letter-spacing: 0.1em;">igiEngine</a>
+    <a class="navbar-brand" href="/Camera"style="font-size: 2.5rem; font-family: 'JetBrains Mono'; letter-spacing: 0.1em;">igiEngine</a>
 </nav>
 
 <!-- Every page's content gets injected here -->
@@ -45,7 +45,9 @@ that appears on every page: <html>, <head>, navbar, footer
         .btn-ffx {
             background:#1e2550; 
             border:1px solid #330860;
+            font-size: 1.20rem;
             color:#7a67ec;
+            font-family: system-ui;
             transition: background .15s, border-color .15s, color .15s;
             cursor: pointer;
         }
@@ -60,8 +62,8 @@ that appears on every page: <html>, <head>, navbar, footer
 
         /* this is the header of the main camera table  */
         .table thead th {
-            font-family: 'Arial Black', serif;
-            font-size: .75rem;
+            font-family: system-ui;
+            font-size: 1rem;
             letter-spacing: .1em;
             text-transform: uppercase;
             color: #7a88bb;
@@ -75,6 +77,8 @@ that appears on every page: <html>, <head>, navbar, footer
             --bs-table-striped-bg: rgba(255, 255, 255, 0.03);
             --bs-table-hover-bg: rgba(255, 255, 255, 0.07);
             --bs-table-border-color: #2e3660;
+            font-family: system-ui;
+            font-size: 1.35rem;
             color: #ccd6f6;
             background: linear-gradient(to right, #2e2a55, #4a4080);
             animation: fade-up 0.4s ease;
@@ -85,7 +89,7 @@ that appears on every page: <html>, <head>, navbar, footer
         }
         
         .navbar {
-            background-image: url('/Images/navbar-bg.svg');
+            background-image: url('/Images/lightheader.svg');
             background-size: 100% 100%;
             background-repeat: no-repeat;
             height:100px;
@@ -103,6 +107,7 @@ that appears on every page: <html>, <head>, navbar, footer
 
         .form-control {
             background: linear-gradient(to right, #2e2a55, #4a4080);
+            font-family: system-ui;
             border: 1px solid #7a6fb0;
             border-radius: 6px;
             color: #ffffff;
@@ -110,6 +115,7 @@ that appears on every page: <html>, <head>, navbar, footer
         }
         .form-select {
             background: linear-gradient(to right, #2e2a55, #4a4080);
+            
             border: 1px solid #7a6fb0;
             border-radius: 6px;
             color: #ffffff;

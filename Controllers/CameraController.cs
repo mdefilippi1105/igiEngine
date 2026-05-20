@@ -290,7 +290,7 @@ public class CameraController : Controller
         }
     }
     
-    
+    [HttpPost]
     public async Task SaveDiscoveredCameras(List<string> rtspUrls)
     {
         foreach (var rtspUrl in rtspUrls)

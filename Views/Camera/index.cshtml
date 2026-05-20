@@ -120,7 +120,7 @@
     </form>
     
     
-    @************************TABLE HEADERS*************** *@
+    @*************TABLE HEADERS****************@
     @* this is the sort form *@
 
     <table class= "table table-striped table-dark table-hover">
@@ -133,6 +133,7 @@
             <th style="width:150px;">Live</th>
             <th style="width:150px;">Edit</th>
             <th style="width:150px;">Delete</th>
+            <th style="width:150px;">TEST RUN</th>
         </tr>
         </thead>
         
@@ -153,29 +154,43 @@
                 <td>@(camera.IsEnabled ? "Yes" : "No")</td>
                 
                 
-                @* this creates a badge based on how the device was added. *@
-                @* i will add more protocol badges as time goes on. *@
-                @* RtspUrl?.ToLower().Contains converts the text to lower and then runs a check *@
+                @* this creates a badge based on how the device was added. 
+                     i will add more protocol badges as time goes on.
+                     RtspUrl?.ToLower().Contains converts the text to lower and then runs a check *@
                 <td>
                     @if (camera.RtspUrl != null 
-                              && camera.RtspUrl?.ToLower().Contains("onvif") == true)
+                         && camera.RtspUrl?.ToLower().Contains("onvif") == true)
                     {
                         <span style="color: #c4c4f3; background: transparent;border: 1px solid #c4c4f3; font-family: 'Courier New', monospace;" class="badge">ONVIF</span> 
                     }
 
                     else if (camera.RtspUrl != null 
-                            && camera.RtspUrl?.ToLower().Contains("rtsp") == true)
+                             && camera.RtspUrl?.ToLower().Contains("rtsp") == true)
                     {
                         <span style="color: #fa8080; background: transparent;border: 1px solid #FA8080FF; font-family: 'Courier New', monospace;" class="badge ">RTSP</span>
                     }
-                    else if (camera.Manufacturer != null)
+                    
+                    // indicative the cam was added manually
+                    // is there a better way? probably
+                    else if (camera.Manufacturer != null) 
                     {
                         <span style="color: #64d01c; background: transparent;border: 1px solid #64d01c; font-family: 'Courier New', monospace;" class="badge ">TEST</span>
                     }
                 </td>
                 
+                
+                @* This is a check to see how the camera was added to the db.
+                    If the camera was added with the rtsp URL > use OpenRtspSession
+                    If the camera was added manually > use OpenCameraObjectSession *@
                 <td>
-                    <a asp-action="OpenRtspSession"
+                    @{
+                        string action;
+                        if (camera.Manufacturer == null)
+                            action = "OpenRtspSession";
+                        else
+                            action = "OpenCameraObjectSession";
+                    }
+                    <a asp-action="@action"
                        asp-route-id="@camera.Id"
                        class="btn btn-sm btn-ffx"
                        style="background:#1e2550; 
@@ -210,6 +225,19 @@
                        data-placement="top"
                        title="Delete device">Delete Camera</a>
                 </td>
+                <td>
+                    <a asp-action="OpenCameraObjectSession"
+                       asp-route-id="@camera.Id"
+                       class="btn btn-sm btn-ffx"
+                       style="background:#1e2550; 
+                       border:1px solid #330860; 
+                       color:#fafafa;"
+                       button type="button"
+                       data-toggle="tooltip"
+                       data-placement="top"
+                       title="View camera stream live">Test RTSP</a>
+                </td>
+                
             </tr>
         }
         </tbody>
@@ -297,7 +325,11 @@
         });
     </script>
     
-    
+    @*
+    This is the javascript for the Onvif modal.
+    Controls the logic for saving the cams if anything is found.
+    button onclick → saveDiscovered() in JS → POST /Camera/SaveDiscovered in C#
+    *@
     
     <script>
         async function runOnvifDiscover () {
@@ -315,11 +347,28 @@
             }
             
             for (let i = 0; i < devices.length; i++) {
-                html += '<p>' + devices[i] + '</p>';
-            }
+                
+                // we're adding a save button if devices are found
+                // show the devices. button fires JS below, bind to save button
+                html += `<p>${devices[i]}</p><button class="btn btn-primary" onclick="saveDiscovered('${devices[i]}')">Save</button>`;            }
             document.getElementById('onvifResults').innerHTML = html;
         }
     </script>
+    <script>
+        
+        async function saveDiscovered (uri) {
+            await fetch ('/Camera/SaveDiscovered/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify([uri])
+            });
+            bootstrap.Modal.getInstance(document.getElementById('discoverModalOnvif')).hide();
+            location.reload();
+        }
+        
+    </script>
+    
+    
     
     @*
     This fugly Javascript function removes cams. Takes the cam id and

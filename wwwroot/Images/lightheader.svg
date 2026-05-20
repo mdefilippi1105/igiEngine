@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 200" preserveAspectRatio="xMidYMid slice" width="100%" role="img">
+    <title>igiEngine header</title>
+    <desc>Dark purple header with grid fading from left, traversed by a soft wispy ray of light drifting right</desc>
+
+    <defs>
+        <pattern id="grid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#2a2f5c" stroke-width="0.5" opacity="0.5"/>
+        </pattern>
+        <pattern id="finegrid" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#1a2040" stroke-width="0.3" opacity="0.4"/>
+        </pattern>
+
+        <linearGradient id="ray" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#6b5fd9" stop-opacity="0"/>
+            <stop offset="35%" stop-color="#9b8fff" stop-opacity="0.06"/>
+            <stop offset="75%" stop-color="#c3b8ff" stop-opacity="0.22"/>
+            <stop offset="97%" stop-color="#e0d8ff" stop-opacity="0.4"/>
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+        </linearGradient>
+
+        <linearGradient id="leftFade" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="white" stop-opacity="0"/>
+            <stop offset="40%" stop-color="white" stop-opacity="0.6"/>
+            <stop offset="70%" stop-color="white" stop-opacity="1"/>
+            <stop offset="100%" stop-color="white" stop-opacity="1"/>
+        </linearGradient>
+        <mask id="gridMask">
+            <rect x="0" y="0" width="680" height="200" fill="url(#leftFade)"/>
+        </mask>
+    </defs>
+
+    <rect x="0" y="0" width="680" height="200" fill="#0d0f1e"/>
+
+    <g mask="url(#gridMask)">
+        <rect x="0" y="0" width="680" height="200" fill="url(#finegrid)"/>
+        <rect x="0" y="0" width="680" height="200" fill="url(#grid)"/>
+    </g>
+
+    <g style="mix-blend-mode: screen;">
+        <rect x="-700" y="0" width="700" height="200" fill="url(#ray)" opacity="0.85">
+            <animate attributeName="x" from="-700" to="680" dur="7s" repeatCount="indefinite"/>
+        </rect>
+    </g>
+
+</svg>

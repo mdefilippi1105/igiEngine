@@ -28,24 +28,24 @@
         @* Name field *@
         <div class="mb-3 text-white">
             <label asp-for="Name" class="form-label"></label>
-            <input asp-for="Name" class="form-control"/>
+            <input asp-for="Name" class="form-control" style="width: 220px;"/>
         </div>
         
         @*Description Field*@
         <div class="mb-3 text-white">
             <label asp-for="Description" class="form-label"></label>
-            <input asp-for="Description" class="form-control" />
+            <input asp-for="Description" class="form-control" style="width: 220px;"/>
         </div>
         
         @* RTSP URL field *@
         <div class="mb-3 text-white">
             <label asp-for="RtspUrl" class="form-label"></label>
-            <input asp-for="RtspUrl" class="form-control" />
+            <input asp-for="RtspUrl" class="form-control" style="width: 220px;" />
         </div>
 
         @* Enabled checkbox *@
-        <div class="mb-3 form-check text-white">
-            <input asp-for="IsEnabled" class="form-check-input" />
+        <div class="mb-3 d-flex align-items-center gap-2">
+            <input asp-for="IsEnabled" class="form-check-input" style="width: 1rem; height: 1rem;" />
             <label asp-for="IsEnabled" class="form-check-label"></label>
         </div>
 

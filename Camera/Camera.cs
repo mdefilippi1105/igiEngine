@@ -24,9 +24,10 @@ public class Camera
     [Display(Name = "IP Address")]
     public string? Host { get; set; }
     
-    
-    [Display(Name = "Port")]
-    public int? Port { get; set; }
+    public string? XAddress { get; set; }
+
+
+    [Display(Name = "Port")] public int? Port { get; set; } = 554;
     
     
     public string? Path { get; set; }
@@ -46,6 +47,8 @@ public class Camera
     public string? Manufacturer { get; set; }
     
     public bool IsOnvif { get; set; }
+    
+    public string? Model { get; set; }
     
     
     public DateTime CreatedAt { get; set; }
