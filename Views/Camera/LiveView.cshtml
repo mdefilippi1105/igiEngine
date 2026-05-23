@@ -37,6 +37,22 @@
                 video.play();
             });
             
+            hls.on(Hls.Events.ERROR, function(event, data) {
+                if (data.details === Hls.ErrorDetails.MANIFEST_LOAD_ERROR ||
+                    data.details === Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT) {
+                    console.log('Retrying stream... attempt: ' + data.context.retryCount);
+                }
+
+                if (data.fatal) {
+                    Swal.fire({
+                        title: 'Stream unavailable.',
+                        text: 'Could not connect to camera.',
+                        icon: 'error',
+                        background: '#1a1a2e',
+                        color: '#ffffff'
+                    });
+                }
+            });
         }, 5000);
     }
     

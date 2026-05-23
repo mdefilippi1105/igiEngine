@@ -14,12 +14,11 @@ using System.Diagnostics;
 // get the ffmpeg data of whatever link you add
 public class StreamVideo
 {
-    
     private int _processCounter;
     private bool _isMtxRunning;
     private bool _isFfmpegRunning;
     
-    public bool StreamDataTest(string filename, Guid cameraId)
+    public void StreamDataTest(string filename, Guid cameraId)
     {
             Process fProcess = new Process();
             // verbose logs for seeing everything, rtsp transport over tcp, point to the rtsp address
@@ -36,12 +35,16 @@ public class StreamVideo
                 _isFfmpegRunning = true;
                 _processCounter++;
                 Console.WriteLine($"Process counter: {_processCounter}");
+                
             }
+            
+            
             
             fProcess.ErrorDataReceived += (sender, e) => Console.WriteLine(e.Data);
             fProcess.BeginErrorReadLine();
-            return true;
     }
+    
+    
 
 
 

@@ -7,6 +7,7 @@ using VideoRecorder.Services;
 using VideoRecorder.Database;
 using VideoRecorder.Network;
 using VideoRecorder.Util;
+using System.Diagnostics;
 
 
 namespace VideoRecorder.Controllers;
@@ -177,6 +178,7 @@ public class CameraController : Controller
         var camera = _context.Camera.Find(id);
         var stream = new StreamVideo();
         var streamId = $"Stream_{camera.Id}";
+        var connectionTimer = Stopwatch.StartNew();
         
         
         //safety check- if the camera stream already exists, throw an error
@@ -189,18 +191,25 @@ public class CameraController : Controller
         
         if (camera.IsEnabled)
         {
+            
             stream.StreamDataTest(camera.RtspUrl, camera.Id);
             SharedData.ActiveStreams[camera.Name] = streamId;
             SharedData.StreamCount++;
             
             var data = SharedData.ListStreams();
             Console.WriteLine(data);
+            connectionTimer.Stop();
+        }
+        else if (connectionTimer.ElapsedMilliseconds > 7000)
+        {
+            TempData["ConnectFail"] = $"Could not reach {camera.Host}. " +
+                                      "Please check network connection or " +
+                                      "try the built in ping tool.";
         }
         
         else
         {
             TempData["Error"] = "Camera is not enabled.";
-            Console.WriteLine("STREAM ERROR CAM UNENABLED");
             return RedirectToAction(nameof(Index));
         }
 
@@ -213,51 +222,86 @@ public class CameraController : Controller
      * we put together a camera URL from the camera db objects
      ************************************************************************/
     
-    public IActionResult OpenCameraObjectSession(Guid id)
+    public async Task < IActionResult> OpenCameraObjectSession(Guid id)
     {
         var camera = _context.Camera.Find(id);
         var stream = new StreamVideo();
         var streamId = $"Stream_{camera.Id}";
-        var user = camera.Username;
-        var pass =  camera.Password;
-        var ip = camera.Host;
-        var port = camera.Port;
-        var type = camera.Manufacturer;
+        // safety checks!
         
-        
-        //safety check- if the camera stream already exists, throw an error
-        // this definitely needs work.
+        // guard - streaming already?
         if (SharedData.ActiveStreams.ContainsKey(camera.Name))
         {
             TempData["Error"] = "Camera stream already active.";
             return RedirectToAction(nameof(Index));
         }
-        
-        if (camera.IsEnabled)
-        {
-            //if the dictionary key is not found, roll over to "/live.sdp"
-            string path = ManufacturerTable.
-                DefaultRtspPaths.GetValueOrDefault(camera.Manufacturer!.ToLower(), "/live.sdp");
-
-            var url = $"rtsp://{user}:{pass}@{ip}/{path}";
-            
-            stream.StreamDataTest(url, camera.Id);
-            SharedData.ActiveStreams[camera.Name] = streamId;
-            SharedData.StreamCount++;
-            
-            var data = SharedData.ListStreams();
-            Console.WriteLine(data);
-        }
-        
-        else
+        // guard - disabled
+        if (!camera.IsEnabled)
         {
             TempData["Error"] = "Camera is not enabled.";
-            Console.WriteLine("STREAM ERROR CAM UNENABLED");
             return RedirectToAction(nameof(Index));
         }
+        /////////////////////////////////////////////////////////////////// 
+        // all clear - connect to camera
+        //////////////////////////////////////////////////////////////////
 
+        // if the dictionary key is not found, roll over to "/live.sdp"
+        string path = ManufacturerTable.DefaultRtspPaths.GetValueOrDefault(
+            camera.Manufacturer!.ToLower(), "/live.sdp");
+            
+        var url = $"rtsp://{camera.Username}:{camera.Password}@{camera.Host}/{path}";
+
+        stream.StreamDataTest(url, camera.Id); //connect to the camera
+
+
+            
+            // add to list of streams
+        SharedData.ActiveStreams[camera.Name] = streamId;
+        SharedData.StreamCount++;
+        Console.WriteLine(SharedData.ListStreams());
+
+        
+        
         return RedirectToAction(nameof(LiveView), new { id = id });
     }
+    
+        /***********************************************************************
+         * repurposed method to check camera stream health
+         ************************************************************************/
+        private async Task<bool> IsStreamReady(Guid id)
+        {
+            using var http = new HttpClient();
+            http.Timeout = TimeSpan.FromMilliseconds(500);
+            var deadline = DateTime.UtcNow.AddSeconds(5);
+
+            while (DateTime.UtcNow < deadline)
+            {
+                try
+                {
+                    await Task.Delay(1000);
+                    var response = await http.GetAsync($"http://localhost:8888/live/{id}/index.m3u8");
+                    if (response.IsSuccessStatusCode)
+                        return true;
+                }
+                catch (TaskCanceledException)
+                {
+                    Console.WriteLine("oops");
+                }
+
+            }
+            return false;
+
+        }
+        
+    /*****************************************************************
+     * Call IsStreamReady and return bool "ready"
+     *****************************************************************/
+    public async Task<IActionResult> StreamStatus(Guid id)
+    {
+        bool ready = await IsStreamReady(id);
+        return Json(new { ready });
+    }
+        
 
     //action for live viewing
     public IActionResult LiveView(Guid id)
