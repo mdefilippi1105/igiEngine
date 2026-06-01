@@ -1,0 +1,90 @@
+@model VideoRecorder.Camera.Camera
+
+@{
+    ViewData["Title"] = "Edit Camera";
+}
+<div class="container mt-4" style="max-width: 600px;">
+    <h2 class="text-white">Edit Camera</h2>
+    
+    <form asp-action="AddCamera" autocomplete="off">
+        
+        @* Name field *@
+        <div class="mb-3 ">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" style="width: 180px;"/>
+        </div>
+        
+        @*Description Field*@
+        <div class="mb-3 ">
+            <label asp-for="Description" class="form-label"></label>
+            <input asp-for="Description" class="form-control" style="width: 180px;" />
+        </div>
+        
+        @* Host field *@
+        <div class="mb-3 ">
+            <label asp-for="Host" class="form-label"></label>
+            <input asp-for="Host" class="form-control" style="width: 180px;" />
+        </div>
+
+        @* Port Field *@
+        <div class="mb-3">
+            <label asp-for="Port" class="form-label"></label>
+            <input asp-for="Port" class="form-control" style="width: 100px;" type="number" />
+        </div>
+        
+        @* Username field *@
+        <div class="mb-3 text-white">
+            <label asp-for="Username" class="form-label"></label>
+            <input asp-for="Username" class="form-control" style="width: 100px;"/>
+        </div>
+        
+        @* Password field *@
+        <div class="mb-3 text-white">
+            <label asp-for="Password" class="form-label"></label>
+            <input asp-for="Password" class="form-control" style="width: 100px;" />
+        </div>
+        
+        
+        @* drop down menu for cam manufacturers *@
+        <div class="mb-3">
+            <label asp-for="Manufacturer" class="form-label "></label>
+            <select asp-for="Manufacturer" class="form-select" style="width: 140px;">
+                <option value=""></option>
+                <option value="axis">Axis</option>
+                <option value="hikvision">Hikvision</option>
+                <option value="dahua">Dahua</option>
+                <option value="vivotek">Vivotek</option>
+                <option value="hanwha">Hanwha</option>
+                <option value="panasonic">Panasonic</option>
+            </select>
+        </div>
+
+        
+        @* Enabled checkbox *@
+        <div class="mb-3 d-flex align-items-center gap-2">
+            <input asp-for="IsEnabled" class="form-check-input" style="width: 1rem; height: 1rem;" />
+            <label asp-for="IsEnabled" class="form-check-label"></label>
+        </div>
+
+        @* Buttons *@
+        <button type="submit" class="btn btn-lg btn-ffx">Save</button>
+        
+        <a
+            asp-action="Index"
+            class="btn btn-lg btn-ffx">Cancel
+        </a>
+        
+        <a
+            onclick="showPing()"
+            class="btn btn-lg btn-ffx ">Ping
+        </a>
+        
+        <a
+            class="btn btn-lg btn-ffx "
+            data-bs-toggle="modal"
+            data-bs-target="#arpModal">
+            ARP
+        </a>
+        
+    </form>
+</div>

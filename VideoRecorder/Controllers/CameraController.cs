@@ -1,0 +1,502 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
+using Onvif.Core.Discovery.Models;
+using VideoRecorder.Camera;
+using VideoRecorder.Services;
+using VideoRecorder.Database;
+using VideoRecorder.Network;
+using VideoRecorder.Util;
+using System.Diagnostics;
+using System.Net;
+using System.Net.NetworkInformation;
+
+
+namespace VideoRecorder.Controllers;
+
+/***************************************************************************
+ * IAction is the interface that represents whatever controller action sends
+ * back to the browser. It is an interface
+ * class inherits everything from .NET controller class
+ ***************************************************************************/
+
+[Authorize]
+public class CameraController : Controller
+{
+    //var to hold the database connection
+    private readonly VideoRecorderContext _context;
+    private readonly AltOnvifDiscovery _discovery;
+    
+
+    public CameraController(VideoRecorderContext context, AltOnvifDiscovery discovery)
+    {
+        _context = context;
+        _discovery = discovery;
+    }
+    
+    /***************************************************************************
+    * this is the method that runs when someone visits /camera
+    * async means it can wait for db without freezing app
+    ***************************************************************************/
+    public async Task<IActionResult> Index(string sortBy = "Name")
+    {
+        // fetch all cams and store to cameras.
+        List<Camera.Camera> cameras = await _context.Camera.ToListAsync();
+        
+        // self-explanatory sortby logic
+        if (sortBy == "Description")
+        {
+            cameras = cameras.OrderBy(c => c.Description).ToList();
+        }
+        else if (sortBy == "IsEnabled")
+        {
+            cameras = cameras.Where(c => c.IsEnabled).ToList();
+        }
+        else
+        {
+            cameras = cameras.OrderBy(c => c.Name).ToList();
+        }
+        
+        // to apply a default sortBy. this allows the sort form to show 
+        // the placeholder properly.
+        ViewData["sortBy"] = sortBy;
+        return View(cameras); // send list of cams to index to be displayed
+    }
+
+    
+    /*************************************************************************
+     * This runs when someone clicks "+ add camera", just shows empty form
+     * The second method is same as Create() but accepts a cam.
+     * When form is submitted .NET automatically fills the camera object with
+     * whatever the user typed in.
+     **************************************************************************/
+    
+    public IActionResult Create()
+    {
+        return View(); //show the cshtml
+    }
+    
+    
+    [HttpPost]
+    public async Task<IActionResult> Create(Camera.Camera camera)
+    {
+        if (ModelState.IsValid) // check data validation
+        {
+            _context.Add(camera); // add cam to database context
+
+            await _context.SaveChangesAsync(); // save to the db
+            TempData["Success"] = "Camera saved!";
+            return RedirectToAction(nameof(Index)); // after saving, send user back to cam list page
+        }
+        else
+        {
+            TempData["Error"] = "Could not add camera.";
+        }
+
+        return View(camera);
+    }
+    [HttpGet]
+    public IActionResult AddCamera()
+    {
+        return View(); //show the cshtml
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddCamera(Camera.Camera camera)
+    {
+        if (ManufacturerTable.DefaultRtspPaths == null)
+            camera.Path = "/Streaming/Channels/101";
+        
+        if (ManufacturerTable.DefaultRtspPaths.ContainsKey(camera.Manufacturer!))
+        {
+            camera.Path = ManufacturerTable.DefaultRtspPaths[camera.Manufacturer!];
+        }
+        if (ModelState.IsValid) // check data validation
+        {
+            _context.Add(camera); // add cam to database context
+
+            await _context.SaveChangesAsync(); // save to the db
+            TempData["Success"] = "Camera saved!";
+            return RedirectToAction(nameof(Index)); // after saving, send user back to cam list page
+        }
+        else
+        {
+            TempData["Error"] = "Could not add camera.";
+        }
+
+        return View(camera);
+    }
+    
+    // delete the camera
+    public async Task<IActionResult> RemoveCamera(Guid id)
+    {
+        try
+        {
+            var camera = await _context.Camera.FindAsync(id);
+            _context.Remove(camera);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Camera removed from database.";
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            TempData["Error"] = "Could not remove camera.";
+        }
+        return RedirectToAction(nameof(Index));
+    }
+
+    
+    //edit the camera
+    public async Task<IActionResult> EditCamera(Guid id)
+    {
+        var camera = await _context.Camera.FindAsync(id);
+        if (camera == null)
+        {
+            TempData["Error"] = "Could not find camera.";
+            return NotFound();
+        }
+
+        return View(camera);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> EditCamera(Camera.Camera camera)
+    {
+        if (ModelState.IsValid)
+        {
+            _context.Camera.Update(camera);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Camera edited successfully!";
+        }
+        return RedirectToAction(nameof(Index));
+    }
+
+    /***********************************************************************
+     * Grab the rtsp url from Camera.RtspUrl table
+     * Open up connection via ffmpeg -> push to media mtx
+     * Add the camera stream ID to stream dictionary
+     * if the stream id is in the dict > throw error ideally
+     ************************************************************************/
+    
+    public IActionResult OpenRtspSession(Guid id)
+    {
+        var camera = _context.Camera.Find(id);
+        var stream = new StreamVideo();
+        var streamId = $"Stream_{camera.Id}";
+        var connectionTimer = Stopwatch.StartNew();
+        
+        
+        //safety check- if the camera stream already exists, throw an error
+        // this definitely needs work.
+        if (SharedData.ActiveStreams.ContainsKey(camera.Name))
+        {
+            TempData["Error"] = "Camera stream already active.";
+            return RedirectToAction(nameof(Index));
+        }
+        
+        if (camera.IsEnabled)
+        {
+            
+            stream.StreamDataTest(camera.RtspUrl, camera.Id);
+            SharedData.ActiveStreams[camera.Name] = streamId;
+            SharedData.StreamCount++;
+            
+            var data = SharedData.ListStreams();
+            Console.WriteLine(data);
+            connectionTimer.Stop();
+        }
+        else if (connectionTimer.ElapsedMilliseconds > 7000)
+        {
+            TempData["ConnectFail"] = $"Could not reach {camera.Host}. " +
+                                      "Please check network connection or " +
+                                      "try the built in ping tool.";
+        }
+        
+        else
+        {
+            TempData["Error"] = "Camera is not enabled.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        return RedirectToAction(nameof(LiveView), new { id = id });
+    }
+    
+    /***********************************************************************
+     * This is basically the same as above
+     * Instead of streaming the rtsp URL as one giant string,
+     * we put together a camera URL from the camera db objects
+     ************************************************************************/
+    
+    public async Task < IActionResult> OpenCameraObjectSession(Guid id)
+    {
+        var camera = _context.Camera.Find(id);
+        var stream = new StreamVideo();
+        var streamId = $"Stream_{camera.Id}";
+        // safety checks!
+        
+        // guard - streaming already?
+        if (SharedData.ActiveStreams.ContainsKey(camera.Name))
+        {
+            TempData["Error"] = "Camera stream already active.";
+            return RedirectToAction(nameof(Index));
+        }
+        // guard - disabled
+        if (!camera.IsEnabled)
+        {
+            TempData["Error"] = "Camera is not enabled.";
+            return RedirectToAction(nameof(Index));
+        }
+        /////////////////////////////////////////////////////////////////// 
+        // all clear - connect to camera
+        //////////////////////////////////////////////////////////////////
+
+        // if the dictionary key is not found, roll over to "/live.sdp"
+        string path = ManufacturerTable.DefaultRtspPaths.GetValueOrDefault(
+            camera.Manufacturer!.ToLower(), "/live.sdp");
+            
+        var url = $"rtsp://{camera.Username}:{camera.Password}@{camera.Host}{path}";
+
+        stream.StreamDataTest(url, camera.Id); //connect to the camera
+        
+            // add to list of streams
+        SharedData.ActiveStreams[camera.Name] = streamId;
+        SharedData.StreamCount++;
+        Console.WriteLine(SharedData.ListStreams());
+        
+        return RedirectToAction(nameof(LiveView), new { id = id });
+    }
+    
+    
+    
+    /***********************************************************************
+     * when you log in ping all cams
+     ************************************************************************/
+
+    public Task<bool> SendAsyncHealthCheck(Guid id)
+    {
+        var ping = new Ping();
+        var camera = _context.Camera.Find(id);
+        var reply = ping.Send(camera.Host, 1000);
+        if (camera.Host == null) return Task.FromResult(false);
+            
+        
+        return Task.FromResult(reply.Status == IPStatus.Success);
+        
+    }
+    
+    
+    
+    
+    
+    
+    
+        /***********************************************************************
+         * repurposed method to check camera stream health
+         ************************************************************************/
+        private async Task<bool> IsStreamReady(Guid id)
+        {
+            using var http = new HttpClient();
+            http.Timeout = TimeSpan.FromMilliseconds(500);
+            var deadline = DateTime.UtcNow.AddSeconds(5);
+
+            while (DateTime.UtcNow < deadline)
+            {
+                try
+                {
+                    await Task.Delay(1000);
+                    var response = await http.GetAsync($"http://localhost:8888/live/{id}/index.m3u8");
+                    if (response.IsSuccessStatusCode)
+                        return true;
+                }
+                catch (TaskCanceledException)
+                {
+                    Console.WriteLine("oops");
+                }
+
+            }
+            return false;
+        }
+        
+    /*****************************************************************
+     * Call IsStreamReady and return bool "ready"
+     *****************************************************************/
+    public async Task<IActionResult> StreamStatus(Guid id)
+    {
+        bool ready = await SendAsyncHealthCheck(id);
+        return Json(new { ready });
+    }
+        
+    /*****************************************************************
+     * Here are the LiveView actions
+     * Moving forward, the plan is to have single
+     * view, 2x2, 3x3, 4x4 etc.
+     * We start by querying the camera table. 
+     * Grab set amount of rows with Take(int)
+     * Run the query and return a List<Camera>
+     *****************************************************************/
+
+    public IActionResult LiveView(Guid id)
+    {
+        ViewData["CameraId"] = id;
+        return View();
+    }
+
+    public IActionResult LiveView2X2()
+    {
+        //for each camera c, sort by its CreatedAt
+        var cameras = _context.Camera.OrderBy(c => c.CreatedAt).Take(4).ToList();
+
+        foreach (var cam in cameras)
+        {
+            if (!cam.IsEnabled) continue;
+            if (SharedData.ActiveStreams.ContainsKey(cam.Name)) continue;
+            
+            var url = $"rtsp://{cam.Username}:{cam.Password}@{cam.Host}{cam.Path}";
+            var stream = new StreamVideo();
+            stream.StreamDataTest(url, cam.Id);
+        }
+
+        ViewBag.Cameras = cameras;
+        return View();
+    }
+    
+    
+    /***********************************************************************
+    * Onvif library discovery method:
+    * 
+    ************************************************************************/
+
+    public async Task<IActionResult> Discover(string username, string password)
+    {
+        try
+        {
+            var discovery = new AltOnvifDiscovery();
+            await discovery.DiscoverAsync(username, password);
+            await SaveDiscoveredCameras(discovery.OnvifUriList!);
+            return Json(discovery.OnvifUriList);
+            
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return Json(e.Message);
+            return Json(new List<DiscoveryDevice>());
+        }
+    }
+    
+    [HttpPost]
+    public async Task SaveDiscoveredCameras(List<string> rtspUrls)
+    {
+        foreach (var rtspUrl in rtspUrls)
+        {
+            var uri = new Uri(rtspUrl);
+            var userInfo = uri.UserInfo.Split(':');
+            
+
+            var camera = new Camera.Camera
+            {
+                IsOnvif =  true,
+                Name = uri.Host,
+                RtspUrl = rtspUrl,
+                Scheme = uri.Scheme,
+                Host = uri.Host,
+                Port = uri.Port,
+                Path = uri.AbsolutePath,
+
+                // if the array has 1 element, take the first one: username
+                // if the array has atleast 2 elements, take the second one: password
+                // the reason for this is if there is no user creds in the string
+                // so splitting on ":" with empty string will get IndexOutOfBounds
+                Username = userInfo.Length > 0 ? userInfo[0] : null,
+                Password = userInfo.Length > 1 ? userInfo[1] : null,
+
+                IsEnabled = true,
+                CreatedAt = DateTime.Now,
+            };
+            
+            
+            _context.Camera.Add(camera);
+        }
+        await _context.SaveChangesAsync();
+    }
+    
+    
+    /************************************************************************
+     *  Ping device and ping subnet
+     ************************************************************************/
+
+    public async Task<IActionResult> PingAddress(string ip)
+    {
+        if (string.IsNullOrEmpty(ip))
+        {
+            TempData["Error"] = "Cannot be null. Please provide a valid IP address.";
+            return RedirectToAction(nameof(Create));
+        }
+        
+        var ping = new DevicePingTools();
+        try
+        {
+            ping.RunPing(ip);
+            TempData["Success"] = "Ping successful to address " + ip;
+            Console.WriteLine("TempData set to success");
+        }
+        catch(Exception e)
+        {
+            Console.WriteLine(e);
+            TempData["Error"] = "Ping failed.";
+        } 
+        
+        return RedirectToAction(nameof(Create));
+    } 
+    
+    /************************************************************************
+     *  Udp Discovery - will likely be removed. I have this bound to a
+     * button in index, so it can always be repurposed. 
+     ************************************************************************/
+
+    public IActionResult UdpDiscover()
+    {
+        var results = new List<string>();
+
+        try
+        {
+            UdpDiscoveryTools.SendDiscovery();
+            results = UdpDiscoveryTools.ReceiveResponse();
+            UdpDiscoveryTools.Stop();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+        return Json(results);
+    }
+
+    public IActionResult Arp()
+    {
+        DevicePingTools.AddressResolution();
+        return Json(DevicePingTools.AddressResolution());
+    }
+    
+    /************************************************************************
+     * Scanning subnet class. Converted from old Java Ping scanner :)
+     * We need [FromBody] tells ASP.NET  to look in the body for
+     * this value otherwise it's going to come in as null.
+     ************************************************************************/
+
+    [HttpPost]
+    public async Task <IActionResult> DetectDevicesOnSubnet([FromBody] ScanRequest request)
+    {
+      var scanner = new DevicePingTools();
+      var results =   await scanner.ScanSubnet(request.Ip);
+      return Json(results);
+    }
+
+    public class ScanRequest
+    {
+        public string Ip { get; set; }
+    }
+    
+    
+    
+}    
+

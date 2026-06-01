@@ -1,0 +1,270 @@
+@using Microsoft.AspNetCore.Hosting.StaticWebAssets
+@*****************************************************************************************
+This is the master template for our app. Its the wrapper that holds all the shared HTML
+that appears on every page: <html>, <head>, navbar, footer
+*****************************************************************************************@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name = "viewport" content = "width=device-width, initial-scale=1.0"/>
+    <title>igiEngine</title>
+    
+    <!-- load bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    
+
+</head>
+
+<body style="background-color: #0d1117;">
+<!-- Top navigation bar -->
+<nav class="navbar navbar-dark px-4" >
+    <a class="navbar-brand" href="/Camera"style="font-size: 2.5rem; font-family: 'JetBrains Mono'; letter-spacing: 0.1em;">igiEngine</a>
+</nav>
+
+<!-- Every page's content gets injected here -->
+@RenderBody()
+
+<!-- Load Bootstrap JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Load Sweet Alert JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+
+
+
+@*****************************************************
+* CSS Styles
+******************************************************@
+    <style>
+        
+        /* buttons  */
+        .btn-ffx {
+            background:#1e2550; 
+            border:1px solid #330860;
+            font-size: 1.20rem;
+            color: #ffffff;
+            font-family: system-ui;
+            transition: background .15s, border-color .15s, color .15s;
+            cursor: pointer;
+        }
+        .btn-ffx:hover {
+            background: #2a3270 !important;
+            border-color: #6655cc !important;
+            color: #fff !important;
+            transform: translateY(-2px);
+            box-shadow: 0 0 10px rgba(102, 85, 204, 0.5);
+            animation: ffx-pulse 1s infinite;
+        }
+
+        /* this is the header of the main camera table  */
+        .table thead th {
+            font-family: system-ui;
+            font-size: 1rem;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: #7a88bb;
+            border-bottom: 1px solid #2e3660;
+
+        }
+
+        /* the main camera table  */
+        .table-dark {
+            --bs-table-bg: transparent;
+            --bs-table-striped-bg: rgba(255, 255, 255, 0.03);
+            --bs-table-hover-bg: rgba(255, 255, 255, 0.07);
+            --bs-table-border-color: #2e3660;
+            font-family: system-ui;
+            font-size: 1.35rem;
+            color: #ccd6f6;
+            background: linear-gradient(to right, #2e2a55, #4a4080);
+            animation: fade-up 0.4s ease;
+        }
+
+        body {
+            background-color: #10163b;
+        }
+        
+        .navbar {
+            background-image: url('/Images/lightheader.svg');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            height:100px;
+            width: 100%;
+        }
+        .form-label{
+            color: #d1d0d2;
+        }
+        .form-check-label{
+            color: #d1d0d2;
+        }
+        .form-check{
+            color: #d1d0d2;
+        }
+
+        .form-control {
+            background: linear-gradient(to right, #2e2a55, #4a4080);
+            font-family: system-ui;
+            border: 1px solid #7a6fb0;
+            border-radius: 6px;
+            color: #ffffff;
+            animation: fade-up 0.4s ease;
+        }
+        .form-select {
+            background: linear-gradient(to right, #2e2a55, #4a4080);
+            
+            border: 1px solid #7a6fb0;
+            border-radius: 6px;
+            color: #ffffff;
+            animation: fade-up 0.4s ease;
+        }
+        
+
+        .form-control:focus {
+            animation: ffx-pulse 1.5s ease-in-out infinite;
+            background: linear-gradient(to right, #3a3560, #5a4e90);
+            color: #ffffff;
+            box-shadow: 0 0 0 2px rgba(200, 168, 64, 0.25);
+        }
+
+        .form-control::placeholder {
+            color: #9090b8;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #383657;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .dot.online {
+            background: limegreen;
+            animation: pulse 1s infinite;
+        }
+
+        .dot.offline {
+            background: #383657;
+            
+        }
+
+        @@keyframes ffx-pulse {
+            0%,100% { box-shadow: 0 0 0 1px rgb(42, 50, 112); }
+            50%      { box-shadow: 0 0 0 3px rgb(102, 85, 204); }
+        }
+        
+        @@keyframes fade-up {
+            from { opacity: 0; transform: translateY(30px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        
+        @@keyframes pulse {
+            0%   { box-shadow: 0 0 0 0 rgba(50, 205, 50, 0.7); }
+            70%  { box-shadow: 0 0 0 8px rgba(50, 205, 50, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(50, 205, 50, 0); }
+            
+        }
+        @@keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 43, 66, 0.7); }
+            70%      { box-shadow: 0 0 0 8px rgba(255, 0, 0, 0); }
+        }
+    </style>
+    
+
+@*****************************************************
+* GLOBAL POP UP HANDLERS
+when we perform an IAction or any other function we
+need to set TempData["keyword"]. based on the keywords
+we put in TempData["keyword"] it will trigger the alert
+below. 
+******************************************************@
+
+@**@
+@if (TempData["Success"] != null)
+{
+    <script>
+        Swal.fire({
+            title: 'Success!',
+            text: '@TempData["Success"]',
+            icon: 'success',
+            confirmButtonText: 'OK',
+            showCancelButton: false,
+            background: '#1a1a2e',
+            color: '#f8fafc',
+            confirmButtonColor: '#6655cc',
+            cancelButtonColor: '#334155'
+
+        })
+    </script>
+}
+@**@
+@if (TempData["Error"] != null)
+{
+    <script>
+        Swal.fire({
+            title: 'Error!',
+            text: '@TempData["Error"]',
+            icon: 'error',
+            showConfirmButton: true,
+            timer: 2000,
+            background: '#1a1a2e',        // dark background
+            color: '#ffffff',             // white text
+            confirmButtonColor: '#6655cc' 
+
+        })
+    </script>
+}
+@*
+This popup appears when deleting a camera. If yes is clicked, delete.
+*@
+@if (TempData["PleaseConfirm"] != null)
+{
+    <script>
+        Swal.fire({
+            title: 'Are you sure?',
+            text: '@TempData["PleaseConfirm"]',
+            icon: 'warning',
+            showConfirmButton: true,
+            showCancelButton: true,
+            ConfirmButtonText: 'Yes',
+            cancelButtonText: 'No',
+            background: '#1a1a2e',        // dark background
+            color: '#ffffff',             // white text
+            confirmButtonColor: '#6655cc' // bootstrap blue
+        }).then((result) => {
+            if (result.isConfirmed) {
+                
+            }
+        });
+    </script>
+}
+
+@if (TempData["ConnectFail"] != null)
+{
+    <script>
+        Swal.fire({
+            title: 'Connection timed out.',
+            text: '@TempData["ConnectFail"]',
+            icon: 'warning',
+            showConfirmButton: true,
+            showCancelButton: true,
+            ConfirmButtonText: 'Yes',
+            cancelButtonText: 'No',
+            background: '#1a1a2e',        // dark background
+            color: '#ffffff',             // white text
+            confirmButtonColor: '#6655cc' // bootstrap blue
+        }).then((result) => {
+            if (result.isConfirmed) {
+
+            }
+        });
+    </script>
+}
+
+</body>
+
+</html>

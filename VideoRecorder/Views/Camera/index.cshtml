@@ -1,0 +1,566 @@
+@* This tells the view what type of data its receiving *@
+
+@model IEnumerable<VideoRecorder.Camera.Camera>
+
+@************************ TOOL BAR *********************@
+<div style="display:flex;">
+
+    <div style="width:160px; 
+        min-width:160px; 
+        background:#0d1117; 
+        border-right:1px solid #330860; 
+        padding:16px 12px; 
+        display:flex; 
+        flex-direction:column; 
+        gap:8px;">
+        
+        <p style="font-size:22px; 
+            color:#6e7a9a; 
+            text-transform:uppercase; 
+            letter-spacing:.07em;
+            padding-bottom:10px;
+            border-bottom:1px solid #1e2550;
+            margin:0;">Cameras</p>
+        
+        @* here is the sort drop-down. we can add more sort options as we go. *@
+        <td>
+            <form method="get">
+                <p style="color:#c4c4f3; margin-bottom:4px;">Sort by</p>
+                <select name="sortBy" onchange="this.form.submit()"
+                        style="background:#1e2550; 
+                border:1px solid #330860; 
+                color:#fafafa; 
+                border-radius:4px; 
+                padding:4px 8px;
+                width:136px";
+                    
+                    > class="btn btn-sm btn-ffx"
+                    <option value="" disabled selected style="color:#888;">Sort by...</option>
+                    <option value="Name" selected="@(ViewData["sortBy"] as string == "Name")">Name</option>
+                    <option value="Description" selected="@(ViewData["sortBy"] as string == "Description")">Description</option>
+                    <option value="IsEnabled" selected="@(ViewData["sortBy"] as string == "IsEnabled")">Enabled</option>
+                </select>
+            </form>
+        </td>
+        
+        <!--Add Camera button -->
+        <a asp-action="AddCamera"
+           class="btn btn-sm btn-ffx"
+           style="background:#1e2550; 
+                  border:1px solid #330860; 
+                  color:#fafafa;
+                  display:flex; 
+                  align-items:center; 
+                  gap:8px;"
+           data-toggle="tooltip"
+           data-placement="top"
+           title="Tooltip on top">
+            <i class="bi bi-plus-circle-fill fs-3"></i>
+            Add Camera
+        </a>
+        
+        <!--Add RTSP -->
+        <a asp-action="Create"
+           class="btn btn-sm btn-ffx"
+           style="background:#1e2550; 
+                  border:1px solid #330860; 
+                  color:#fafafa;
+                  display:flex; 
+                  align-items:center; 
+                  gap:8px;"
+                  data-toggle="tooltip"
+                  data-placement="top"
+                  title="Tooltip on top">
+            <i class="bi bi-plus-circle-fill fs-3"></i>
+            Add via RTSP
+        </a>
+        
+        
+        <!-- Camera Discovery button -->
+        <a
+            class="btn btn-sm btn-ffx"
+            style="background:#1e2550; 
+                   border:1px solid #330860; 
+                   color:#fafafa;
+                   display:flex; 
+                   align-items:center; 
+                   gap:8px;"
+            data-bs-toggle="modal"
+            data-bs-target="#discoverModal">
+            <i class="bi bi-broadcast fs-3"></i>
+            Add via WDS
+        </a>
+        
+        <!-- Onvif Button    -->
+        <a
+            class="btn btn-sm btn-ffx"
+            style="background:#1e2550; 
+                   border:1px solid #330860; 
+                   color:#fafafa;
+                   display:flex; 
+                   align-items:center; 
+                   gap:8px;"
+            data-bs-toggle="modal"
+            data-bs-target="#discoverModalOnvif">
+            <i class="bi bi-camera-reels"></i>
+            Add via ONVIF
+        </a>
+        
+        <!-- Scan Subnet Button    -->
+        <a
+            class="btn btn-sm btn-ffx"
+            style="background:#1e2550; 
+                   border:1px solid #330860; 
+                   color:#fafafa;
+                   display:flex; 
+                   align-items:center; 
+                   gap:8px;"
+            data-bs-toggle="modal"
+            data-bs-target="#subnetModal">
+            <i class="bi bi-camera-reels"></i>
+            Subnet Scan
+        </a>
+        
+        <a asp-action="?"
+           class="btn btn-sm btn-ffx"
+           style="background:#1e2550; 
+                  border:1px solid #330860; 
+                  color:#fafafa;
+                  display:flex; 
+                  align-items:center; 
+                  gap:8px;"
+           data-toggle="tooltip"
+           data-placement="top"
+           data-bs-target="#liveViewModal"
+           data-bs-toggle="modal"
+           
+           title="Tooltip on top">
+            <i class="bi bi-plus-circle-fill fs-3"></i>
+            Live View Config
+        </a>
+
+    </div>
+    
+    <!-- Hidden form for camera delete 
+    We cannot POST without this
+    We give the form a name so JS can find it.
+    we send POST request, run action.
+    "id" matches argument for RemoveCamera(int id) -->
+                
+    <form id="confirmForm" method="post" asp-action="RemoveCamera">
+        @Html.AntiForgeryToken()
+        <input type="hidden" id="cameraIdInput" name="id" value=""/>
+    </form>
+    
+    
+    @*******************************TABLE HEADERS********************************@
+    @* this is the sort form *@
+
+    <table class= "table table-striped table-dark table-hover">
+        <thead class="table-dark">
+        <tr>
+            <th style="width:150px;">Name</th>
+            <th style="width:150px;">Description</th>
+            <th style="width:150px;">Enabled</th>
+            <th style="width:150px;">Protocol</th>
+            <th style="width:150px;">Live</th>
+            <th style="width:150px;">Edit</th>
+            <th style="width:150px;">Delete</th>
+            <th style="width:150px;">Online</th>
+        </tr>
+        </thead>
+        
+        <tbody>
+        
+        @************************************************************************* 
+        ***************************** TABLE BODY *********************************
+                        loop through every camera and display in a row 
+                            add a button next to each entry 
+        *************************************************************************@
+        
+        @foreach (var camera in Model)
+        {
+            
+            <tr>
+                <input type="hidden" name="Id" value="@camera.Id"/>
+                <td>@camera.Name</td>
+                <td>@camera.Description</td>
+                <td>@(camera.IsEnabled ? "Yes" : "No")</td>
+
+                
+                
+                @* this creates a badge based on how the device was added. 
+                     i will add more protocol badges as time goes on.
+                     RtspUrl?.ToLower().Contains converts the text to lower and then runs a check *@
+                <td>
+                    @if (camera.RtspUrl != null 
+                         && camera.RtspUrl?.ToLower().Contains("onvif") == true)
+                    {
+                        <span style="color: #c4c4f3; background: transparent;border: 1px solid #c4c4f3; font-family: 'Courier New', monospace;" class="badge">ONVIF</span> 
+                    }
+
+                    else if (camera.RtspUrl != null 
+                             && camera.RtspUrl?.ToLower().Contains("rtsp") == true)
+                    {
+                        <span style="color: #fa8080; background: transparent;border: 1px solid #FA8080FF; font-family: 'Courier New', monospace;" class="badge ">RTSP</span>
+                    }
+                    
+                    // indicative the cam was added manually
+                    // is there a better way? probably
+                    else if (camera.Manufacturer != null) 
+                    {
+                        <span style="color: #64d01c; background: transparent;border: 1px solid #64d01c; font-family: 'Courier New', monospace;" class="badge ">TEST</span>
+                    }
+                </td>
+                
+                
+                @* This is a check to see how the camera was added to the db.
+                    If the camera was added with the rtsp URL > use OpenRtspSession
+                    If the camera was added manually > use OpenCameraObjectSession *@
+                <td>
+                    @{
+                        string action;
+                        if (camera.Manufacturer == null)
+                            action = "OpenRtspSession";
+                        else
+                            action = "OpenCameraObjectSession";
+                    }
+                    <a asp-action="@action"
+                       asp-route-id="@camera.Id"
+                       class="btn btn-sm btn-ffx"
+                       style="background:#1e2550; 
+                       border:1px solid #330860; 
+                       color:#fafafa;"
+                       button type="button"
+                       data-toggle="tooltip"
+                       data-placement="top"
+                       title="View camera stream live">Live</a>
+                </td>
+                <td>
+                    <a asp-action="EditCamera"
+                       asp-route-id="@camera.Id"
+                       class="btn btn-sm btn-ffx"
+                       style="background:#1e2550; 
+                       border:1px solid #330860; 
+                       color:#fafafa;"
+                       button type="button"
+                       data-toggle="tooltip"
+                       data-placement="top"
+                       title="Edit device">Edit</a>
+                </td>
+
+                <td>
+                    <a onclick="confirmRemove('@camera.Id')"
+                       class="btn btn-sm btn-ffx"
+                       style="background:#1e2550; 
+                       border:1px solid #330860; 
+                       color:#fafafa;"
+                       button type="button"
+                       data-toggle="tooltip"
+                       data-placement="top"
+                       title="Delete device">Delete</a>
+                </td>
+                <td>
+                    <span id="status-@camera.Id" class="dot"> </span>
+                </td>
+                
+            </tr>
+        }
+        </tbody>
+    </table>
+    
+    
+    @* 
+        this is the part of the window where it should place the discovered devices 
+    *@
+    
+    <div class="modal fade" id="discoverModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title">Discovered Cameras</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="discoverResults">
+                    Scanning...please wait.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    
+    @* 
+        ONVIF devices discovery Modal 
+    *@
+    
+    <div class="modal fade" id="discoverModalOnvif" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title">Discover ONVIF Cameras</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+            
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label>Username</label>
+                        <input type="text" id="onvifUsername" class="form-control bg-dark text-white" value="root" />
+                    </div>
+                    <div class="mb-3">
+                        <label>Password</label>
+                        <input type="password" id="onvifPassword" class="form-control bg-dark text-white" />
+                    </div>
+                    <div id="onvifResults"></div>
+                </div>
+            
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-ffx" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-sm btn-ffx" onclick="runOnvifDiscover()">Scan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    @* 
+        Modal created for subnet scanning results 
+    *@
+    
+    <div class="modal fade" id="subnetModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title">Subnet Scan</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label></label>
+                        
+                        @* this is where the input goes *@
+                        <input type="text" id="ipInput" 
+                               class="form-control bg-dark text-white" />
+                    </div>
+                    <div id="scanSpinner" class="text-center d-none"> @* spinner time *@
+                        <div class="spinner-border text-light"></div>
+                    </div>
+                </div>
+                <div class="modal-body" id="subnetResults">@* this is where the scan results go *@
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="startScan()">Scan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    @* 
+        Modal created for choosing your view configuration
+    *@
+
+    <!-- The modal git-->
+    <div class="modal fade" id="liveViewModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Choose an Action</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    What would you like to do with this camera?
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success"
+                            onclick='location.href="@Url.Action("LiveView2x2", "Camera")"'>
+
+                        2x2
+                    </button>
+                    <button type="button" class="btn btn-warning" onclick="">Edit</button>
+                    <button type="button" class="btn btn-danger"  onclick="">Delete</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+    
+    
+    @*************************************************************************
+                            javascript
+    *************************************************************************@
+    
+    @* 
+    Javascript for the modal 
+    find modal by id, listen for bootstrap shown.bs.modal event
+    make request to Discover action
+    convert response into JSON data from OnvifDiscovery
+    if not empty, loop through each device
+    *@
+    
+    <script>
+        async function startScan() {
+            const ip = document.getElementById('ipInput').value;
+            
+            document.getElementById('scanSpinner').classList.remove('d-none'); // show the spinner
+            document.getElementById('subnetResults').innerHTML = '';
+
+            try {
+                
+                const response = await fetch('/Camera/DetectDevicesOnSubnet/', { // get the ping results back
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ ip: ip })
+                });
+
+                const results = await response.json();
+
+
+                let html ='';
+                for(let i =0; i < results.length; i++){
+                    html += '<p style="color: lime;">' + results[i] + '</p>' // make text green
+                }
+                document.getElementById('scanSpinner').classList.add('d-none'); // hide spinner
+                
+                document.getElementById('subnetResults').innerHTML = html;
+                
+                if (results.length === 0 ) { // nothin' found
+                    document.getElementById('subnetResults').innerHTML = "Unfortunately, no devices were found."
+                    + "\nPlease check your network connection."
+                }
+            } catch (error) {
+                document.getElementById('subnetResults').innerHTML = error.message;
+                
+            }
+            
+            // event listener for close button. clear the List<>
+            document.getElementById('subnetModal').addEventListener('hidden.bs.modal', function () {
+                document.getElementById('subnetResults').innerHTML = '';
+                document.getElementById('subnetModal').classList.remove('d-none');
+            });
+
+        }
+
+    </script>
+    
+    @*this is broken*@
+    <script>
+        document.getElementById('discoverModal').addEventListener('shown.bs.modal',
+        
+        async function () {
+            
+            const response = await fetch('/Camera/UdpDiscover/'); 
+            const devices = await response.json();
+            let html = '';
+            
+            if (devices.length === 0) {
+                html = '<p> No devices found.</p>';
+            }
+            
+            for (let i = 0; i < devices.length; i++) {
+                html += '<p>' + devices[i] + '</p>';
+            }
+            document.getElementById('discoverResults').innerHTML = html;
+        });
+    </script>
+    
+    @*
+    This is the javascript for the Onvif modal.
+    Controls the logic for saving the cams if anything is found.
+    button onclick → saveDiscovered() in JS → POST /Camera/SaveDiscovered in C#
+    *@
+    
+    <script>
+        async function runOnvifDiscover () {
+            
+            const username = document.getElementById('onvifUsername').value;
+            const password = document.getElementById('onvifPassword').value;
+            document.getElementById('onvifResults').innerHTML = '<p>Scanning...please wait</p>';
+            
+            const response = await fetch(`/Camera/Discover?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`); 
+            const devices = await response.json();
+            let html = '';
+            
+            if (devices.length === 0) {
+                html = '<p> No devices found.</p>';
+            }
+            
+            for (let i = 0; i < devices.length; i++) {
+                
+                // we're adding a save button if devices are found
+                // show the devices. button fires JS below, bind to save button
+                html += `<p>${devices[i]}</p><button class="btn btn-sm btn-ffx" onclick="saveDiscovered('${devices[i]}')">Save</button>`;            }
+            document.getElementById('onvifResults').innerHTML = html;
+        }
+    </script>
+    <script>
+        
+        
+        async function saveDiscovered (uri) {
+            await fetch ('/Camera/SaveDiscovered/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify([uri])
+            });
+            bootstrap.Modal.getInstance(document.getElementById('discoverModalOnvif')).hide();
+            location.reload();
+        }
+        
+    </script>
+    
+    @*This checks each camera for the online status.*@
+    <script>
+        document.querySelectorAll('.dot').forEach(async dot => {
+            const id = dot.id.replace('status-', '');
+            const response = await fetch('/Camera/StreamStatus/' + id);
+            const data = await response.json();
+
+            @* dot.classList.remove('online', 'offline'); // clear out the old state *@
+            
+            if (data.ready) {
+                dot.classList.add('online'); // if ready the span class becomes dot.online
+            } else {
+                dot.classList.add('offline'); // or dot.offline. diff CSS colors for each
+            }    
+            
+        })
+    </script>
+    
+    
+    
+    @*
+    This fugly Javascript function removes cams. Takes the cam id and
+    name as paramaters passed in from the button click. open
+    sweetalert. if YES is clicked -> set the hidden input value 
+    to the camera id right before sending. then submit the form.
+    *@
+    <script>
+        function confirmRemove(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: `Remove Camera?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes',
+                cancelButtonText: 'No',
+                background: '#1a1a2e',
+                color: '#ffffff',
+                confirmButtonColor: '#0d6efd'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    cameraIdInput.value = id;
+                    document.getElementById("confirmForm").submit();
+                }
+            });
+        }
+    </script>
+    
+   
+
+</div>
