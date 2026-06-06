@@ -1,3 +1,5 @@
+@using VideoRecorder.Camera
+@model Camera;
 @{
     ViewData["Title"] = "Live View";
 }
@@ -56,6 +58,19 @@
         }, 5000);
     }
     
+</script>
+
+@************************************************************************
+* Javascript to listen for the "back button clicked".
+* For this, we are using sendBeacon. sendBeacon does not wait 
+* for a reply, only guarantees it sends even as the page closes
+**************************************************************************@
+<script>
+    const cameraId = "@ViewData["CameraId"]";
+    
+    window.addEventListener("pagehide", function() {
+            navigator.sendBeacon("/Camera/DestroyStream/" + cameraId);
+        });
 </script>
 
 

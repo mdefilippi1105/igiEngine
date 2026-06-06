@@ -2,13 +2,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Onvif.Core.Discovery.Models;
-using VideoRecorder.Camera;
 using VideoRecorder.Services;
 using VideoRecorder.Database;
 using VideoRecorder.Network;
 using VideoRecorder.Util;
 using System.Diagnostics;
-using System.Net;
 using System.Net.NetworkInformation;
 
 
@@ -21,7 +19,7 @@ namespace VideoRecorder.Controllers;
  ***************************************************************************/
 
 [Authorize]
-public class CameraController : Controller
+public class CameraController : Controller, IDisposable
 {
     //var to hold the database connection
     private readonly VideoRecorderContext _context;
@@ -95,6 +93,7 @@ public class CameraController : Controller
 
         return View(camera);
     }
+    
     [HttpGet]
     public IActionResult AddCamera()
     {
@@ -185,15 +184,6 @@ public class CameraController : Controller
         var streamId = $"Stream_{camera.Id}";
         var connectionTimer = Stopwatch.StartNew();
         
-        
-        //safety check- if the camera stream already exists, throw an error
-        // this definitely needs work.
-        if (SharedData.ActiveStreams.ContainsKey(camera.Name))
-        {
-            TempData["Error"] = "Camera stream already active.";
-            return RedirectToAction(nameof(Index));
-        }
-        
         if (camera.IsEnabled)
         {
             
@@ -232,28 +222,22 @@ public class CameraController : Controller
         var camera = _context.Camera.Find(id);
         var stream = new StreamVideo();
         var streamId = $"Stream_{camera.Id}";
-        // safety checks!
-        
-        // guard - streaming already?
-        if (SharedData.ActiveStreams.ContainsKey(camera.Name))
-        {
-            TempData["Error"] = "Camera stream already active.";
-            return RedirectToAction(nameof(Index));
-        }
+
         // guard - disabled
         if (!camera.IsEnabled)
         {
             TempData["Error"] = "Camera is not enabled.";
             return RedirectToAction(nameof(Index));
         }
-        /////////////////////////////////////////////////////////////////// 
-        // all clear - connect to camera
-        //////////////////////////////////////////////////////////////////
-
+        
         // if the dictionary key is not found, roll over to "/live.sdp"
         string path = ManufacturerTable.DefaultRtspPaths.GetValueOrDefault(
             camera.Manufacturer!.ToLower(), "/live.sdp");
-            
+        
+        /////////////////////////////////////////////////////////////////// 
+        // all clear - connect to camera
+        //////////////////////////////////////////////////////////////////
+        
         var url = $"rtsp://{camera.Username}:{camera.Password}@{camera.Host}{path}";
 
         stream.StreamDataTest(url, camera.Id); //connect to the camera
@@ -267,7 +251,27 @@ public class CameraController : Controller
     }
     
     
-    
+    /***********************************************************************
+    * Shut down a camera stream.
+     ************************************************************************/
+
+    [HttpPost]
+    //take a key (dictionary key - the ip or cam name)
+    public IActionResult DestroyStream(string id)
+    {
+        Console.WriteLine($"id sent: {id}");
+        Console.WriteLine($"actual keys: {string.Join(", ", SharedData.StreamObjects.Keys)}");
+        
+        //thread safe removes key from keypair StreamObjects dict 
+        if (SharedData.StreamObjects.TryRemove(id, out var stream))
+        {
+            stream.Dispose();
+            
+            SharedData.ActiveStreams.TryRemove(id, out _);
+            
+        }
+        return Ok();
+    }
     /***********************************************************************
      * when you log in ping all cams
      ************************************************************************/
@@ -283,12 +287,6 @@ public class CameraController : Controller
         return Task.FromResult(reply.Status == IPStatus.Success);
         
     }
-    
-    
-    
-    
-    
-    
     
         /***********************************************************************
          * repurposed method to check camera stream health
@@ -392,7 +390,6 @@ public class CameraController : Controller
             var uri = new Uri(rtspUrl);
             var userInfo = uri.UserInfo.Split(':');
             
-
             var camera = new Camera.Camera
             {
                 IsOnvif =  true,
@@ -413,7 +410,6 @@ public class CameraController : Controller
                 IsEnabled = true,
                 CreatedAt = DateTime.Now,
             };
-            
             
             _context.Camera.Add(camera);
         }
@@ -495,8 +491,6 @@ public class CameraController : Controller
     {
         public string Ip { get; set; }
     }
-    
-    
     
 }    
 

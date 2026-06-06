@@ -70,6 +70,24 @@
     
 </script>
 
+@************************************************************************
+* Javascript to listen for the "back button clicked".
+* For this, we are using sendBeacon. sendBeacon does not wait 
+* for a reply, only guarantees it sends even as the page closes
+**************************************************************************@
+<script>
+    const cameraIdList = [
+        @foreach (var cam in ViewBag.Cameras)
+        {
+            @:"@cam.Id",
+        }
+    ];
+    window.addEventListener("pagehide", function() {
+        cameraIdList.forEach(function(id) {
+            navigator.sendBeacon("/Camera/DestroyStream/" + id);
+        })
+    })
+</script>
 
 
 
