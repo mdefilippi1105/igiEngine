@@ -7,7 +7,7 @@ public class Camera
     public Guid Id { get; set; } = Guid.NewGuid();
     
    
-    [Required, StringLength(100)]
+    [StringLength(100)]
     [Display(Name = "Camera Name")]
     public string? Name { get; set; }
     
@@ -43,7 +43,7 @@ public class Camera
     [StringLength(100)]
     public string? Path { get; set; }
     
-    [Required, StringLength(100)]
+    [StringLength(100)]
     [Display(Name = "Username")]
     public string? Username  { get; set; }
     

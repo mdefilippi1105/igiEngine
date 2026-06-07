@@ -2,11 +2,9 @@
 // Born: Feb 23 19:10:51 2026
 
 using Microsoft.AspNetCore.Authentication.Cookies;
-using VideoRecorder.Camera;
 using Microsoft.EntityFrameworkCore;
 using VideoRecorder.Database;
 using VideoRecorder.Services;
-
 
 
     //DONE: Convert discovered onvif into URI object + save to db
@@ -18,17 +16,15 @@ using VideoRecorder.Services;
     //DONE: make sure no 2 of the same ffmpeg process running (implement camera guid)
     //DONE: discovered devices: remove duplicates
     //DONE: have some sort or reconnect logic if retries exceed an amount of time
+    //DONE:  create 4 way view
+    //DONE: Utilize IDisposable to clean up streams
     //TODO: discovered devices: clear devices button (maybe add these to a list<>())
     //TODO: discovered devices: show mac address
     //TODO: discovered devices: highlight devices that are actually network cams
     //TODO: Fix ping - shows success incorrectly
-    //TODO:  create 4 way view
     //TODO: Convert comments to <param> style
-    //TODO: Utilize IDisposable to clean up streams
     //TODO: Bug when adding rtsp camera
     
-
-
 
 
     // the first thing we want to do is to begin MediaMtx

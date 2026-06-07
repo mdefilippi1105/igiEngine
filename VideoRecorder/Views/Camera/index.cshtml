@@ -75,7 +75,6 @@
             Add via RTSP
         </a>
         
-        
         <!-- Camera Discovery button -->
         <a
             class="btn btn-sm btn-ffx"
@@ -152,7 +151,6 @@
         <input type="hidden" id="cameraIdInput" name="id" value=""/>
     </form>
     
-    
     @*******************************TABLE HEADERS********************************@
     @* this is the sort form *@
 
@@ -186,7 +184,6 @@
                 <td>@camera.Name</td>
                 <td>@camera.Description</td>
                 <td>@(camera.IsEnabled ? "Yes" : "No")</td>
-
                 
                 
                 @* this creates a badge based on how the device was added. 
@@ -237,7 +234,14 @@
                        title="View camera stream live">Live</a>
                 </td>
                 <td>
-                    <a asp-action="EditCamera"
+                    @{
+                        string editAction;
+                        if (camera.RtspUrl == null)
+                            editAction = "EditCamera";
+                        else
+                            editAction = "EditRtsp";
+                    }                   
+                    <a asp-action="@editAction"
                        asp-route-id="@camera.Id"
                        class="btn btn-sm btn-ffx"
                        style="background:#1e2550; 
@@ -337,7 +341,9 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label></label>
+                        <label>
+                            Please enter an IP address. This will scan 254 hosts under the specified subnet.
+                        </label>
                         
                         @* this is where the input goes *@
                         <input type="text" id="ipInput" 
@@ -378,7 +384,6 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-ffx"
                             onclick='location.href="@Url.Action("LiveView2x2", "Camera")"'>
-
                         2x2
                     </button>
                     <button type="button" class="btn btn-sm btn-ffx" onclick="">Edit</button>

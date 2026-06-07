@@ -1,0 +1,56 @@
+@model VideoRecorder.Camera.Camera
+
+@{
+    ViewData["Title"] = "Edit RTSP Camera";
+}
+
+<div class="container mt-4" style="max-width: 600px;">
+    <h2 class="text-white">Edit Camera</h2>
+    
+<form asp-action="Create" autocomplete="off">
+
+@* Name field *@
+<div class="mb-3 ">
+    <label asp-for="Name" class="form-label"></label>
+    <input asp-for="Name" class="form-control" style="width: 180px;"/>
+</div>
+
+@*Description Field*@
+<div class="mb-3 ">
+    <label asp-for="Description" class="form-label"></label>
+    <input asp-for="Description" class="form-control" style="width: 180px;" />
+</div>
+
+@*Description Field*@
+<div class="mb-3 ">
+    <label asp-for="RtspUrl" class="form-label"></label>
+    <input asp-for="RtspUrl" class="form-control" style="width: 180px;" />
+</div>
+@* Enabled checkbox *@
+<div class="mb-3 d-flex align-items-center gap-2">
+    <input asp-for="IsEnabled" class="form-check-input" style="width: 1rem; height: 1rem;" />
+    <label asp-for="IsEnabled" class="form-check-label"></label>
+</div>
+@* Buttons *@
+<button type="submit" class="btn btn-lg btn-ffx">Save</button>
+        
+<a
+    asp-action="Index"
+    class="btn btn-lg btn-ffx">Cancel
+</a>
+        
+<a
+    onclick="showPing()"
+    class="btn btn-lg btn-ffx ">Ping
+</a>
+        
+<a
+    class="btn btn-lg btn-ffx "
+    data-bs-toggle="modal"
+    data-bs-target="#arpModal">
+    ARP
+</a>
+
+</form>
+
+</div>

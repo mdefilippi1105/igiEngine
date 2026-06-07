@@ -19,7 +19,7 @@ namespace VideoRecorder.Controllers;
  ***************************************************************************/
 
 [Authorize]
-public class CameraController : Controller, IDisposable
+public class CameraController : Controller 
 {
     //var to hold the database connection
     private readonly VideoRecorderContext _context;
@@ -159,7 +159,7 @@ public class CameraController : Controller, IDisposable
     }
 
     [HttpPost]
-    public async Task<IActionResult> EditCamera(Camera.Camera camera)
+    public async Task<IActionResult> EditRtsp(Camera.Camera camera)
     {
         if (ModelState.IsValid)
         {
@@ -169,7 +169,35 @@ public class CameraController : Controller, IDisposable
         }
         return RedirectToAction(nameof(Index));
     }
+    
+    // edit cameras that were added via RTSP link
+    public async Task<IActionResult> EditRtsp(Guid id)
+    {
+        var camera = await _context.Camera.FindAsync(id);
+        if (camera == null)
+        {
+            TempData["Error"] = "Could not find camera.";
+            return NotFound();
+        }
+        return View(camera);
+    }
 
+    [HttpPost]
+    public async Task<IActionResult> EditRtspCamera(Camera.Camera camera)
+    {
+        if (ModelState.IsValid)
+        {
+            _context.Camera.Update(camera);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Camera updated successfully!";
+        }
+        return RedirectToAction(nameof(Index));
+    }
+    
+    
+    
+    
+    
     /***********************************************************************
      * Grab the rtsp url from Camera.RtspUrl table
      * Open up connection via ffmpeg -> push to media mtx
