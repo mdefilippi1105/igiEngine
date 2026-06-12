@@ -1,5 +1,6 @@
 @* This tells the view what type of data its receiving *@
 
+@using Microsoft.IdentityModel.Tokens
 @model IEnumerable<VideoRecorder.Camera.Camera>
 
 @************************ TOOL BAR *********************@
@@ -206,7 +207,7 @@
                     // is there a better way? probably
                     else if (camera.Manufacturer != null) 
                     {
-                        <span style="color: #64d01c; background: transparent;border: 1px solid #64d01c; font-family: 'Courier New', monospace;" class="badge ">TEST</span>
+                        <span style="color: #64d01c; background: transparent;border: 1px solid #64d01c; font-family: 'Courier New', monospace;" class="badge ">STREAM</span>
                     }
                 </td>
                 
@@ -217,7 +218,7 @@
                 <td>
                     @{
                         string action;
-                        if (camera.Manufacturer == null)
+                        if (camera.Manufacturer.IsNullOrEmpty())
                             action = "OpenRtspSession";
                         else
                             action = "OpenCameraObjectSession";
@@ -385,6 +386,10 @@
                     <button type="button" class="btn btn-sm btn-ffx"
                             onclick='location.href="@Url.Action("LiveView2x2", "Camera")"'>
                         2x2
+                    </button>
+                    <button type="button" class="btn btn-sm btn-ffx"
+                            onclick='location.href="@Url.Action("LiveView2x3", "Camera")"'>
+                        2x3
                     </button>
                     <button type="button" class="btn btn-sm btn-ffx" onclick="">Edit</button>
                     <button type="button" class="btn btn-sm btn-ffx"  onclick="">Delete</button>

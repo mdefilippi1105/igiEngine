@@ -15,7 +15,7 @@ public class Camera
     [StringLength(100)]
     public string? Description { get; set; }
     
-    [StringLength(100)]
+    [StringLength(500)]
     [Display(Name = "RTSP URL")]
     public string? RtspUrl { get; set; }
     

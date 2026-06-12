@@ -24,12 +24,15 @@ public class CameraController : Controller
     //var to hold the database connection
     private readonly VideoRecorderContext _context;
     private readonly AltOnvifDiscovery _discovery;
-    
+    private readonly ILogger<CameraController> _logger;
 
-    public CameraController(VideoRecorderContext context, AltOnvifDiscovery discovery)
+
+    
+    public CameraController(VideoRecorderContext context, AltOnvifDiscovery discovery, ILogger<CameraController> logger)
     {
         _context = context;
         _discovery = discovery;
+        _logger = logger;
     }
     
     /***************************************************************************
@@ -195,9 +198,6 @@ public class CameraController : Controller
     }
     
     
-    
-    
-    
     /***********************************************************************
      * Grab the rtsp url from Camera.RtspUrl table
      * Open up connection via ffmpeg -> push to media mtx
@@ -306,14 +306,20 @@ public class CameraController : Controller
 
     public Task<bool> SendAsyncHealthCheck(Guid id)
     {
-        var ping = new Ping();
         var camera = _context.Camera.Find(id);
-        var reply = ping.Send(camera.Host, 1000);
-        if (camera.Host == null) return Task.FromResult(false);
-            
+        if (camera == null) return Task.FromResult(false);
         
+        // use camera.Host if it's not null, else parse RtspUrl and pull host out of it
+        var host = camera.Host ?? new Uri(camera.RtspUrl!).Host;
+        if (string.IsNullOrEmpty(host)) return Task.FromResult(false);
+
+       
+        var ping = new Ping();
+        var reply = ping.Send(host, 1000);
+
+
         return Task.FromResult(reply.Status == IPStatus.Success);
-        
+
     }
     
         /***********************************************************************
@@ -384,6 +390,26 @@ public class CameraController : Controller
 
         ViewBag.Cameras = cameras;
         return View();
+    }
+
+    public IActionResult LiveView2X3()
+    {
+        //for each camera c, sort by its CreatedAt
+        var cameras = _context.Camera.OrderBy(c => c.CreatedAt).Take(6).ToList();
+
+        foreach (var cam in cameras)
+        {
+            if (!cam.IsEnabled) continue;
+            if (SharedData.ActiveStreams.ContainsKey(cam.Name)) continue;
+            
+            var url = $"rtsp://{cam.Username}:{cam.Password}@{cam.Host}{cam.Path}";
+            var stream = new StreamVideo();
+            stream.StreamDataTest(url, cam.Id);
+        }
+
+        ViewBag.Cameras = cameras;
+        return View();
+        
     }
     
     
@@ -486,6 +512,7 @@ public class CameraController : Controller
         {
             UdpDiscoveryTools.SendDiscovery();
             results = UdpDiscoveryTools.ReceiveResponse();
+            Thread.Sleep(3000);
             UdpDiscoveryTools.Stop();
         }
         catch (Exception e)

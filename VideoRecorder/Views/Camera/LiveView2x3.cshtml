@@ -1,0 +1,89 @@
+@{
+    ViewData["Title"] = "Live View 2X3";
+}
+
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; height: 100vh; background:black;">
+    
+    @foreach (var cam in ViewBag.Cameras)
+    {
+        <video id="video-@cam.Id" muted playsinline style="width:100%; height:100%;"></video>
+    }
+    
+</div>
+
+@************************************************************************
+* find the video element, then create a new HLS player instance.
+* tell HLS.js where the stream is. index.m3u8 is the playlist 
+* file mediamtx generates - a text file that says where the video chunks are.
+* listen for the event after playlist file is parsed
+* next, we wait 5 secs for ffmpeg to connect
+**************************************************************************@
+@* <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script> *@
+
+<script src="~/js/hls.min.js"></script>
+
+<script>
+    
+    
+    
+    function startPlayer(cameraId) {
+        const video = document.getElementById("video-" + cameraId);
+        video.removeAttribute('src');
+        
+        const hls = new Hls({
+            manifestLoadingMaxRetry: 10,
+            manifestLoadingRetryDelay: 2000,
+            manifestLoadingMaxRetryTimeout: 64000,
+        });
+        
+        setTimeout(function() {
+            hls.loadSource('http://localhost:8888/live/' + cameraId + '/index.m3u8');
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                video.play();
+            });
+            
+            hls.on(Hls.Events.ERROR, function(event, data) {
+                if (data.details === Hls.ErrorDetails.MANIFEST_LOAD_ERROR ||
+                    data.details === Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT) {
+                    console.log('Retrying stream... attempt: ' + data.context.retryCount);
+                }
+
+                if (data.fatal) {
+                    Swal.fire({
+                        title: 'Stream unavailable.',
+                        text: 'Could not connect to camera.',
+                        icon: 'error',
+                        background: '#1a1a2e',
+                        color: '#ffffff'
+                    });
+                }
+            });
+        }, 6000);
+    }
+    
+    @foreach (var cam in ViewBag.Cameras)
+    {
+        @:startPlayer("@cam.Id");
+    }
+    
+</script>
+
+@************************************************************************
+* Javascript to listen for the "back button clicked".
+* For this, we are using sendBeacon. sendBeacon does not wait 
+* for a reply, only guarantees it sends even as the page closes
+**************************************************************************@
+<script>
+    const cameraIdList = [
+        @foreach (var cam in ViewBag.Cameras)
+        {
+            @:"@cam.Id",
+        }
+    ];
+    window.addEventListener("pagehide", function() {
+        cameraIdList.forEach(function(id) {
+            navigator.sendBeacon("/Camera/DestroyStream/" + id);
+        })
+    })
+</script>

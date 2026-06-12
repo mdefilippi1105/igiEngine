@@ -10,7 +10,7 @@ using VideoRecorder.Services;
     //DONE: Convert discovered onvif into URI object + save to db
     //DONE: lower buffering > over 10sec
     //DONE: when deleting camera, confirm y or n?
-    //DONE?: need some kind of loading state, i think liveview is popping up before the stream and crashes
+    //DONE?: need some kind of loading state, i think live view is popping up before the stream and crashes
     //DONE: fix or delete Stream.ProcessChecker()
     //DONE: create camera guid per stream 
     //DONE: make sure no 2 of the same ffmpeg process running (implement camera guid)
@@ -18,12 +18,15 @@ using VideoRecorder.Services;
     //DONE: have some sort or reconnect logic if retries exceed an amount of time
     //DONE:  create 4 way view
     //DONE: Utilize IDisposable to clean up streams
+    //DONE: Bug when adding rtsp camera
+    //DONE ping on dashboard does not work for rtsp added devices
+    //DONE: check out bugs with onvif discovery
     //TODO: discovered devices: clear devices button (maybe add these to a list<>())
     //TODO: discovered devices: show mac address
     //TODO: discovered devices: highlight devices that are actually network cams
     //TODO: Fix ping - shows success incorrectly
     //TODO: Convert comments to <param> style
-    //TODO: Bug when adding rtsp camera
+    
     
 
 
@@ -57,7 +60,7 @@ using VideoRecorder.Services;
     var app = builder.Build(); //build it
 
 
-    app.UseStaticFiles(); //allow for css, images, js
+    app.UseStaticFiles(); //allow for CSS, images, js
 
 
     app.UseRouting(); //turn on routing so URLS work

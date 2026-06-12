@@ -22,7 +22,6 @@ public class AccountController : Controller
  * ClaimsPrincipal represents the user as an object
  *******************************************************************************************/
 
-
     [HttpPost]
     public async Task<IActionResult> Login(string username, string password)
     {
