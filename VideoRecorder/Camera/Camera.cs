@@ -5,8 +5,9 @@ namespace VideoRecorder.Camera;
 public class Camera
 {
     public Guid Id { get; set; } = Guid.NewGuid();
+
+    public bool IsOnline { get; set; } = false;
     
-   
     [StringLength(100)]
     [Display(Name = "Camera Name")]
     public string? Name { get; set; }

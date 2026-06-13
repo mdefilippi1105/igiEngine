@@ -509,11 +509,13 @@
             document.getElementById('onvifResults').innerHTML = html;
         }
     </script>
+    
+    
+    
     <script>
         
-        
         async function saveDiscovered (uri) {
-            await fetch ('/Camera/SaveDiscovered/', {
+            await fetch ('/Camera/SaveDiscoveredCameras/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify([uri])

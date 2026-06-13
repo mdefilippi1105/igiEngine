@@ -312,10 +312,11 @@ public class CameraController : Controller
         // use camera.Host if it's not null, else parse RtspUrl and pull host out of it
         var host = camera.Host ?? new Uri(camera.RtspUrl!).Host;
         if (string.IsNullOrEmpty(host)) return Task.FromResult(false);
-
-       
+        
+        
         var ping = new Ping();
         var reply = ping.Send(host, 1000);
+        
 
 
         return Task.FromResult(reply.Status == IPStatus.Success);
@@ -354,7 +355,11 @@ public class CameraController : Controller
      *****************************************************************/
     public async Task<IActionResult> StreamStatus(Guid id)
     {
+        
         bool ready = await SendAsyncHealthCheck(id);
+        var cam = _context.Camera.Find(id);
+        cam!.IsOnline = ready;
+        await _context.SaveChangesAsync();
         return Json(new { ready });
     }
         
@@ -488,7 +493,6 @@ public class CameraController : Controller
         {
             ping.RunPing(ip);
             TempData["Success"] = "Ping successful to address " + ip;
-            Console.WriteLine("TempData set to success");
         }
         catch(Exception e)
         {
