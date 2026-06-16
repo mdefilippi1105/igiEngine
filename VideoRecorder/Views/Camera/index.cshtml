@@ -1,7 +1,7 @@
 @* This tells the view what type of data its receiving *@
 
 @using Microsoft.IdentityModel.Tokens
-@model IEnumerable<VideoRecorder.Camera.Camera>
+@model IEnumerable<VideoRecorder.Models.Camera>
 
 @************************ TOOL BAR *********************@
 <div style="display:flex;">
@@ -56,7 +56,7 @@
            data-toggle="tooltip"
            data-placement="top"
            title="Tooltip on top">
-            <i class="bi bi-plus-circle-fill fs-3"></i>
+            <img src="~/Images/addcamera.png" alt="" width="45" height="45">
             Add Camera
         </a>
         
@@ -69,26 +69,11 @@
                   display:flex; 
                   align-items:center; 
                   gap:8px;"
-                  data-toggle="tooltip"
-                  data-placement="top"
-                  title="Tooltip on top">
-            <i class="bi bi-plus-circle-fill fs-3"></i>
+           data-toggle="tooltip"
+           data-placement="top"
+           title="Tooltip on top">
+            <img src="~/Images/addrtsp.png" alt="" width="45" height="45">
             Add via RTSP
-        </a>
-        
-        <!-- Camera Discovery button -->
-        <a
-            class="btn btn-sm btn-ffx"
-            style="background:#1e2550; 
-                   border:1px solid #330860; 
-                   color:#fafafa;
-                   display:flex; 
-                   align-items:center; 
-                   gap:8px;"
-            data-bs-toggle="modal"
-            data-bs-target="#discoverModal">
-            <i class="bi bi-broadcast fs-3"></i>
-            Add via WDS
         </a>
         
         <!-- Onvif Button    -->
@@ -102,9 +87,26 @@
                    gap:8px;"
             data-bs-toggle="modal"
             data-bs-target="#discoverModalOnvif">
-            <i class="bi bi-camera-reels"></i>
+            <img src="~/Images/addonvif.png" alt="" width="45" height="45">
             Add via ONVIF
         </a>
+        
+        <!-- Camera Discovery button -->
+        <a
+            class="btn btn-sm btn-ffx"
+            style="background:#1e2550; 
+                   border:1px solid #330860; 
+                   color:#fafafa;
+                   display:flex; 
+                   align-items:center; 
+                   gap:8px;"
+            data-bs-toggle="modal"
+            data-bs-target="#discoverModal">
+            <img src="~/Images/addwds.png" alt="" width="45" height="45">
+            Add via WSD
+        </a>
+        
+
         
         <!-- Scan Subnet Button    -->
         <a
@@ -117,7 +119,7 @@
                    gap:8px;"
             data-bs-toggle="modal"
             data-bs-target="#subnetModal">
-            <i class="bi bi-camera-reels"></i>
+            <img src="~/Images/subnetscan.png" alt="" width="45" height="45">
             Subnet Scan
         </a>
         
@@ -133,11 +135,19 @@
            data-placement="top"
            data-bs-target="#liveViewModal"
            data-bs-toggle="modal"
-           
            title="Tooltip on top">
-            <i class="bi bi-plus-circle-fill fs-3"></i>
-            Live View Config
+            <img src="~/Images/liveviewconfig.png" alt="" width="45" height="45">
+            Setup Views
         </a>
+        
+        <a asp-controller="User" 
+           asp-action="Index" 
+           class="btn btn-ffx"
+           >
+            <img src="~/Images/users.png" alt="" width="45" height="45">
+            Users
+        </a>
+          
 
     </div>
     
@@ -232,7 +242,10 @@
                        button type="button"
                        data-toggle="tooltip"
                        data-placement="top"
-                       title="View camera stream live">Live</a>
+                       title="View camera stream live">Live
+                        <img src="~/Images/live.png" alt="" width="30" height="30">
+                    </a>
+                    
                 </td>
                 <td>
                     @{
@@ -251,7 +264,9 @@
                        button type="button"
                        data-toggle="tooltip"
                        data-placement="top"
-                       title="Edit device">Edit</a>
+                       title="Edit device">Edit
+                        <img src="~/Images/edit.png" alt="" width="30" height="30">
+                    </a>
                 </td>
 
                 <td>
@@ -263,7 +278,9 @@
                        button type="button"
                        data-toggle="tooltip"
                        data-placement="top"
-                       title="Delete device">Delete</a>
+                       title="Delete device">Delete
+                        <img src="~/Images/delete.png" alt="" width="30" height="30">
+                    </a>
                 </td>
                 <td>
                     <span id="status-@camera.Id" class="dot"> </span>

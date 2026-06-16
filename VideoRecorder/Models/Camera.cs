@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace VideoRecorder.Camera;
+namespace VideoRecorder.Models;
 
 public class Camera
 {

@@ -8,7 +8,7 @@ using OnvifDiscovery;
 using DateTime = System.DateTime;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using VideoRecorder.Camera;
+using VideoRecorder.Models;
 
 namespace OnvifDiscovery;
 

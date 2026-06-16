@@ -6,6 +6,8 @@ using VideoRecorder.Services;
 using VideoRecorder.Database;
 using VideoRecorder.Network;
 using VideoRecorder.Util;
+using VideoRecorder.Models;
+
 using System.Diagnostics;
 using System.Net.NetworkInformation;
 
@@ -42,7 +44,7 @@ public class CameraController : Controller
     public async Task<IActionResult> Index(string sortBy = "Name")
     {
         // fetch all cams and store to cameras.
-        List<Camera.Camera> cameras = await _context.Camera.ToListAsync();
+        List<Camera> cameras = await _context.Camera.ToListAsync();
         
         // self-explanatory sortby logic
         if (sortBy == "Description")
@@ -79,7 +81,7 @@ public class CameraController : Controller
     
     
     [HttpPost]
-    public async Task<IActionResult> Create(Camera.Camera camera)
+    public async Task<IActionResult> Create(Camera camera)
     {
         if (ModelState.IsValid) // check data validation
         {
@@ -104,7 +106,7 @@ public class CameraController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> AddCamera(Camera.Camera camera)
+    public async Task<IActionResult> AddCamera(Camera camera)
     {
         if (ManufacturerTable.DefaultRtspPaths == null)
             camera.Path = "/Streaming/Channels/101";
@@ -162,7 +164,7 @@ public class CameraController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> EditRtsp(Camera.Camera camera)
+    public async Task<IActionResult> EditRtsp(Camera camera)
     {
         if (ModelState.IsValid)
         {
@@ -186,7 +188,7 @@ public class CameraController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> EditRtspCamera(Camera.Camera camera)
+    public async Task<IActionResult> EditRtspCamera(Camera camera)
     {
         if (ModelState.IsValid)
         {
@@ -374,8 +376,11 @@ public class CameraController : Controller
 
     public IActionResult LiveView(Guid id)
     {
+        var camera = _context.Camera.Find(id);
+        if (camera == null) return NotFound();
+        
         ViewData["CameraId"] = id;
-        return View();
+        return View(camera);
     }
 
     public IActionResult LiveView2X2()
@@ -449,7 +454,7 @@ public class CameraController : Controller
             var uri = new Uri(rtspUrl);
             var userInfo = uri.UserInfo.Split(':');
             
-            var camera = new Camera.Camera
+            var camera = new Camera
             {
                 IsOnvif =  true,
                 Name = uri.Host,

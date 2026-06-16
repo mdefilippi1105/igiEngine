@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using VideoRecorder.Models;
 
 
 namespace VideoRecorder.Database;
@@ -15,7 +16,7 @@ public class VideoRecorderContext : DbContext
     {
     }
 
-    public DbSet<Camera.Camera> Camera { get; set; }
+    public DbSet<Camera> Camera { get; set; }
     
 
 }
