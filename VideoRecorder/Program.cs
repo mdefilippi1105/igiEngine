@@ -27,6 +27,7 @@ using VideoRecorder.Services;
     //TODO: Fix ping - shows success incorrectly
     //TODO: Convert comments to <param> style
     //TODO: When discovering onvif cams, save button saves all instead of one at a time
+    //TODO: program crashes when saving camera with an empty field
     
     
 

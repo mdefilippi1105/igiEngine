@@ -9,7 +9,7 @@ public class User
     [StringLength(50)] 
     public string Username { get; set; } = string.Empty;
     
-    [StringLength(50)] 
+    [StringLength(256)] 
     public string PasswordHash { get; set; } = string.Empty;
     
     public string Role { get; set; } = "Viewer";

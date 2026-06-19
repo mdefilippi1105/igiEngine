@@ -1,4 +1,143 @@
 @{
     ViewData["Title"] = "Manage Users";
 }
+@model VideoRecorder.Models.User
+
 <h1> Manage Users </h1>
+
+<div style="display:flex;">
+    
+     @*********************************************** 
+    this is the entire tool bar starting at the div
+    
+    ***********************************************@
+    <div style="width:160px; 
+        min-width:160px; 
+        background:#0d1117; 
+        border-right:1px solid #330860; 
+        padding:16px 12px; 
+        display:flex; 
+        flex-direction:column; 
+        gap:8px;">
+
+        <p style="font-size:22px; 
+            color:#6e7a9a; 
+            text-transform:uppercase; 
+            letter-spacing:.07em;
+            padding-bottom:10px;
+            border-bottom:1px solid #1e2550;
+            margin:0;">Users</p>
+
+
+        <!--Add new user -->
+        <a asp-action="AddCamera"
+           class="btn btn-sm btn-ffx"
+           style="background:#1e2550; 
+                  border:1px solid #330860; 
+                  color:#fafafa;
+                  display:flex; 
+                  align-items:center; 
+                  gap:8px;"
+           data-toggle="tooltip"
+           data-placement="top"
+           title="Tooltip on top">
+            <img src="~/Images/newuser.png" alt="" width="45" height="45">
+            New User
+        </a>
+
+        <!--Edit user -->
+        <a asp-action="Create"
+           class="btn btn-sm btn-ffx"
+           style="background:#1e2550; 
+                  border:1px solid #330860; 
+                  color:#fafafa;
+                  display:flex; 
+                  align-items:center; 
+                  gap:8px;"
+           data-toggle="tooltip"
+           data-placement="top"
+           title="Tooltip on top">
+            <img src="~/Images/edituser.png" alt="" width="45" height="45">
+            Edit User
+        </a>
+
+        <!-- Delete user   -->
+        <a
+            class="btn btn-sm btn-ffx"
+            style="background:#1e2550; 
+                   border:1px solid #330860; 
+                   color:#fafafa;
+                   display:flex; 
+                   align-items:center; 
+                   gap:8px;"
+            data-bs-toggle="modal"
+            data-bs-target="#discoverModalOnvif">
+            <img src="~/Images/deleteuser.png" alt="" width="45" height="45">
+            Delete User
+        </a>
+
+        <!-- Clone user -->
+        <a
+            class="btn btn-sm btn-ffx"
+            style="background:#1e2550; 
+                   border:1px solid #330860; 
+                   color:#fafafa;
+                   display:flex; 
+                   align-items:center; 
+                   gap:8px;"
+            data-bs-toggle="modal"
+            data-bs-target="#discoverModal">
+            <img src="~/Images/cloneuser.png" alt="" width="45" height="45">
+            Clone User
+        </a>
+
+
+
+        <!-- Back to cameras   -->
+        <a
+            class="btn btn-sm btn-ffx"
+            style="background:#1e2550; 
+                   border:1px solid #330860; 
+                   color:#fafafa;
+                   display:flex; 
+                   align-items:center; 
+                   gap:8px;"
+            data-bs-toggle="modal"
+            data-bs-target="#subnetModal">
+            <img src="~/Images/subnetscan.png" alt="" width="45" height="45">
+            Return to Cams
+        </a>
+    </div>
+    
+    
+    <div>
+        @* this is the sort form *@
+
+        <table class="table table-striped table-dark table-hover">
+            <thead class="table-dark">
+            <tr>
+                <th style="width:150px;">Name</th>
+                <th style="width:150px;">Description</th>
+                <th style="width:150px;">Enabled</th>
+                <th style="width:150px;">Protocol</th>
+                <th style="width:150px;">Live</th>
+                <th style="width:150px;">Edit</th>
+                <th style="width:150px;">Delete</th>
+                <th style="width:150px;">Online</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            @*  the table rows  *@
+            </tbody>
+        </table>
+
+    </div>
+
+
+
+
+</div>@* end tool bar   *@
+
+
+
