@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using VideoRecorder.Database;
 using VideoRecorder.Models;
 
@@ -15,6 +16,7 @@ public class UserController : Controller
     {
         _logger = logger;
         _context = context;
+        _hasher = new PasswordHasher<User>();
     }
     
     public IActionResult Index()
@@ -36,8 +38,10 @@ public class UserController : Controller
     {
         // never store the plain text. salt and hash it > then save into PasswordHash
         user.PasswordHash = _hasher.HashPassword(user, user.PasswordHash);
+        
         _context.Add(user);
         await _context.SaveChangesAsync();
+        
         return RedirectToAction(nameof(Index));
     }
 }

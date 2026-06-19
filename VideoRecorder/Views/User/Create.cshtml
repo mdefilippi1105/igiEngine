@@ -1,7 +1,79 @@
-namespace VideoRecorder.Views.User;
+@* Tell this view it will receive a User object *@
+@using VideoRecorder.Models
+@model VideoRecorder.Models.User
 
-public class Create_cshtml
-{
+<div class="container mt-4" style="max-width: 600px;">
+    <h2 class="text-white">Add Camera</h2>
+
+    @* asp-action= "Create" tells the form to POST to /User/Create *@
+    <form asp-action="Create" autocomplete="off">
+
+    @* Username field *@
+    <div class="mb-3 text-white">
+        <label asp-for="Username" class="form-label">Username</label>
+        <input asp-for="Username" class="form-control" style="width: 220px;"/>
+    </div>
     
+    @* Password field *@
+    <div class="mb-3 text-white">
+        <label asp-for="PasswordHash" class="form-label">Password</label>
+        <input asp-for="PasswordHash" class="form-control" style="width: 150px;" type="password" />
+    </div>
     
-}
+    @* drop down menu for User.Roles *@
+    <div class="mb-3">
+        <label asp-for="Role" class="form-label "></label>
+        <select asp-for="Role" asp-items="Html.GetEnumSelectList<UserRoles>()"
+                class="form-select" style="width: 140px;">
+            
+        </select> 
+        
+    </div>
+    @* Enabled checkbox *@
+    <div class="mb-3 d-flex align-items-center gap-2">
+        <input asp-for="IsEnabled" class="form-check-input" style="width: 1rem; height: 1rem;" />
+        <label asp-for="IsEnabled" class="form-check-label">Is Enabled?</label>
+    </div>
+
+
+    @*FirstName Field*@
+    <div class="mb-3 text-white">
+        <label asp-for="FirstName" class="form-label">First Name</label>
+        <input asp-for="FirstName" class="form-control" style="width: 220px;"/>
+    </div>
+
+    @* LastName field *@
+    <div class="mb-3 text-white">
+        <label asp-for="LastName" class="form-label">Last Name</label>
+        <input asp-for="LastName" class="form-control" style="width: 220px;" />
+    </div>
+
+
+       @* Phonenumber field *@
+        <div class="mb-3 ">
+            <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+            <input asp-for="PhoneNumber" class="form-control" style="width: 220px;"/>
+        </div>
+
+        @*Email Field*@
+        <div class="mb-3 ">
+            <label asp-for="Email" class="form-label">Email Address</label>
+            <input asp-for="Email" class="form-control" style="width: 220px;" />
+        </div>
+
+        @* Department field *@
+        <div class="mb-3 ">
+            <label asp-for="Department" class="form-label">Department</label>
+            <input asp-for="Department" class="form-control" style="width: 220px;" />
+        </div>
+        
+
+
+
+
+        @* Buttons *@
+        <button type="submit" class="btn btn-lg btn-ffx">Save</button>
+
+
+    </form>
+</div>

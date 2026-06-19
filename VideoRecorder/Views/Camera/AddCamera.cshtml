@@ -3,7 +3,7 @@
 
 <div class="container mt-4" style="max-width: 600px;">
     <h2 class="text-white">Add Camera</h2>
-    
+
     @* this is the part of the window where it should place the discovered devices *@
     <div class="modal fade" id="arpModal" tabindex="-1">
         <div class="modal-dialog">
@@ -21,22 +21,22 @@
             </div>
         </div>
     </div>
-    
+
     @* asp-action= "AddCamera" tells the form to POST to /Camera/Create *@
     <form asp-action="AddCamera" autocomplete="off">
-        
+
         @* Name field *@
         <div class="mb-3 ">
             <label asp-for="Name" class="form-label"></label>
             <input asp-for="Name" class="form-control" style="width: 220px;"/>
         </div>
-        
+
         @*Description Field*@
         <div class="mb-3 ">
             <label asp-for="Description" class="form-label"></label>
             <input asp-for="Description" class="form-control" style="width: 220px;" />
         </div>
-        
+
         @* Host field *@
         <div class="mb-3 ">
             <label asp-for="Host" class="form-label"></label>
@@ -48,20 +48,20 @@
             <label asp-for="Port" class="form-label"></label>
             <input asp-for="Port" class="form-control" style="width: 150px;" type="number" placeholder="554"/>
         </div>
-        
+
         @* Username field *@
         <div class="mb-3 text-white">
             <label asp-for="Username" class="form-label"></label>
             <input asp-for="Username" class="form-control" style="width: 150px;;"/>
         </div>
-        
+
         @* Password field *@
         <div class="mb-3 text-white">
             <label asp-for="Password" class="form-label"></label>
             <input asp-for="Password" class="form-control" style="width: 150px;" type="password" />
         </div>
-        
-        
+
+
         @* drop down menu for cam manufacturers *@
         <div class="mb-3">
             <label asp-for="Manufacturer" class="form-label "></label>
@@ -76,7 +76,7 @@
             </select>
         </div>
 
-        
+
         @* Enabled checkbox *@
         <div class="mb-3 d-flex align-items-center gap-2">
             <input asp-for="IsEnabled" class="form-check-input" style="width: 1rem; height: 1rem;" />
@@ -85,24 +85,24 @@
 
         @* Buttons *@
         <button type="submit" class="btn btn-lg btn-ffx">Save</button>
-        
+
         <a
             asp-action="Index"
             class="btn btn-lg btn-ffx">Cancel
         </a>
-        
+
         <a
             onclick="showPing()"
             class="btn btn-lg btn-ffx ">Ping
         </a>
-        
+
         <a
             class="btn btn-lg btn-ffx "
             data-bs-toggle="modal"
             data-bs-target="#arpModal">
             ARP
         </a>
-        
+
 
         <script>
             function showPing() {
@@ -126,30 +126,30 @@
             }
 
         document.getElementById('arpModal').addEventListener('shown.bs.modal',
-        
+
         async function showArp () {
-            
-            const response = await fetch('/Camera/Arp/'); 
+
+            const response = await fetch('/Camera/Arp/');
             const devices = await response.json();
             let html = '';
-            
+
             if (devices.length === 0) {
                 html = '<p> No devices found.</p>';
             }
-            
-            for (let i = 0; i < devices.length; i++) 
+
+            for (let i = 0; i < devices.length; i++)
             {
                 html += '<p>' + devices[i] + '</p>';
             }
             document.getElementById('arpResults').innerHTML = html;
         });
     </script>
-        
-        
-        
-        
-        
-        
-        
+
+
+
+
+
+
+
     </form>
 </div>
