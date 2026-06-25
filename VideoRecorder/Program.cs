@@ -2,8 +2,10 @@
 // Born: Feb 23 19:10:51 2026
 
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using VideoRecorder.Database;
+using VideoRecorder.Models;
 using VideoRecorder.Services;
 
 
@@ -28,6 +30,7 @@ using VideoRecorder.Services;
     //TODO: Convert comments to <param> style
     //TODO: When discovering onvif cams, save button saves all instead of one at a time
     //TODO: program crashes when saving camera with an empty field
+    //TODO: create a default admin username built - in
     
     
 
@@ -58,6 +61,10 @@ using VideoRecorder.Services;
 
     // create one instance of this class per HTTP request and then destroy it
     builder.Services.AddScoped<AltOnvifDiscovery>();
+    
+    // create an instance of IPasswordHasher; create during the HTTP request and then toss it
+    // request the IPasswordHasher interface, initiate the PasswordHasher method
+    builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
     var app = builder.Build(); //build it
 

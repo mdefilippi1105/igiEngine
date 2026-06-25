@@ -22,18 +22,18 @@ public class User
      * somebody wants more info other than a user/pass
      ******************************************************* */
     [StringLength(50)] 
-    public string FirstName { get; set; } = string.Empty;
+    public string? FirstName { get; set; } = string.Empty;
     
     [StringLength(50)] 
-    public string LastName { get; set; } = string.Empty;
+    public string? LastName { get; set; } = string.Empty;
     
     [StringLength(50)] 
-    public string Email { get; set; } = string.Empty;
+    public string? Email { get; set; } = string.Empty;
     
     [StringLength(20)] 
-    public string PhoneNumber { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; } = string.Empty;
     
     [StringLength(50)] 
-    public string Department { get; set; } = string.Empty;
+    public string? Department { get; set; } = string.Empty;
     
 }
