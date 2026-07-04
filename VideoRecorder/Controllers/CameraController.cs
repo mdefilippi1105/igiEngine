@@ -10,6 +10,7 @@ using VideoRecorder.Models;
 
 using System.Diagnostics;
 using System.Net.NetworkInformation;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 
 namespace VideoRecorder.Controllers;
@@ -48,21 +49,22 @@ public class CameraController : Controller
         
         // self-explanatory sortby logic
         if (sortBy == "Description")
-        {
             cameras = cameras.OrderBy(c => c.Description).ToList();
-        }
+        
         else if (sortBy == "IsEnabled")
-        {
             cameras = cameras.Where(c => c.IsEnabled).ToList();
-        }
+        
         else
-        {
             cameras = cameras.OrderBy(c => c.Name).ToList();
-        }
         
         // to apply a default sortBy. this allows the sort form to show 
         // the placeholder properly.
         ViewData["sortBy"] = sortBy;
+        
+        //toss our database items in the viewbag
+        ViewBag.Cameras = new SelectList(_context.Camera, "Id", "Name");
+        ViewBag.Groups = new SelectList(_context.CameraGroup, "Id", "Name");
+        
         return View(cameras); // send list of cams to index to be displayed
     }
 
@@ -137,6 +139,11 @@ public class CameraController : Controller
         try
         {
             var camera = await _context.Camera.FindAsync(id);
+            if (camera == null)
+            {
+                TempData["Error"] = "Nothing to delete!";
+                return NotFound();
+            }
             _context.Remove(camera);
             await _context.SaveChangesAsync();
             TempData["Success"] = "Camera removed from database.";
@@ -421,6 +428,23 @@ public class CameraController : Controller
         return View();
         
     }
+
+    public IActionResult LiveView2X4()
+    {
+        var cameras = _context.Camera.OrderBy(c => c.CreatedAt).Take(8).ToList();
+        foreach (var cam in cameras)
+        {
+            if (!cam.IsEnabled) continue;
+            if (SharedData.ActiveStreams.ContainsKey(cam.Name)) continue;
+
+            var url = $"rtsp://{cam.Username}:{cam.Password}@{cam.Host}{cam.Path}";
+            var stream = new StreamVideo();
+            stream.StreamDataTest(url, cam.Id);
+        }
+        
+        ViewBag.Cameras = cameras;
+        return View();
+    }
     
     
     /***********************************************************************
@@ -555,6 +579,68 @@ public class CameraController : Controller
     {
         public string Ip { get; set; }
     }
+    /************************************************************************
+     * Group Assignment Methods
+     * The basic flow is: pick a camera, pick a group, submit
+     * 2 Assign() functions. one for get, one for post. post is labeled
+     ************************************************************************/
+
+    public IActionResult Assign()
+    {
+        // we only use SelectList for populating <select> from a database table
+        // arg 2 = value field, arg 3 = display text
+        ViewBag.Cameras = new SelectList(_context.Camera.ToList(), "Id", "Name");
+        ViewBag.Groups = new SelectList(_context.CameraGroup.ToList(), "Id", "Name");
+        return View();
+    }
+
+    [HttpPost]
+    public IActionResult Assign(Guid cameraId, int groupId)
+    {
+        var cam = _context.Camera.Find(cameraId);
+        cam.GroupId = groupId;
+        _context.SaveChanges();
+        return RedirectToAction("Index");
+    }
+
+    public IActionResult AddCameraGroup()
+    {
+        ViewBag.Cameras = new SelectList(_context.Camera.ToList(), "Id", "Name");
+        ViewBag.Groups = new SelectList(_context.CameraGroup.ToList(), "Id", "Name");
+       
+        // this is to add the cameras to an unordered list
+        ViewBag.CameraList = _context.Camera.ToList();
+        
+        return View();
+    }
+
+    [HttpPost]
+    public IActionResult AddCameraGroup(string name, List<Guid> cameraIds)
+    {
+        //make a new group. when we hit SaveChanges() it will generate and ID for us
+        var group = new CameraGroup { Name = name };
+        if (string.IsNullOrEmpty(name))
+            return RedirectToAction("Index");
+        _context.CameraGroup.Add(group);
+        _context.SaveChanges();
+
+        foreach (var id in cameraIds)
+        {
+            var cam = _context.Camera.Find(id);
+            cam!.GroupId = group.Id;
+        }
+        _context.SaveChanges();
+        return RedirectToAction("Index");
+    }
+
+    public IActionResult ShowCameraGroups()
+    {
+        var groups = _context.CameraGroup.Include(g => g.Cameras).ToList();
+        return View(groups);
+    }
+    
+    
+    
     
 }    
 

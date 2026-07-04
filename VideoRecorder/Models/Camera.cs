@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 
 namespace VideoRecorder.Models;
 
@@ -69,6 +70,9 @@ public class Camera
     
     public DateTime CreatedAt { get; set; }
     
+    
+    public int? GroupId { get; set; }
+    public CameraGroup? CameraGroup { get; set; }
     
     
 }

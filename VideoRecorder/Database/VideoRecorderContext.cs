@@ -20,6 +20,8 @@ public class VideoRecorderContext : DbContext
     
     public DbSet<User> User { get; set; }
     
+    public DbSet<CameraGroup> CameraGroup { get; set; }
+    
 
 }
 

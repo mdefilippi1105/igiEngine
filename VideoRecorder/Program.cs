@@ -31,7 +31,8 @@ using VideoRecorder.Services;
     //TODO: When discovering onvif cams, save button saves all instead of one at a time
     //TODO: program crashes when saving camera with an empty field
     //TODO: create a default admin username built - in
-    
+    //TODO: find way to obscure username/pass in rtsp url
+    //TODO: add devices through csv
     
 
 
@@ -77,7 +78,7 @@ using VideoRecorder.Services;
     // default URL pattern: website.com/Camera/Index
     app.MapControllerRoute(
         name: "default",
-        pattern: "{controller=Camera}/{action=Index}/{id?}");
+        pattern: "{controller=Home}/{action=Index}/{id?}");
 
     app.UseAuthentication();
     app.UseAuthorization();

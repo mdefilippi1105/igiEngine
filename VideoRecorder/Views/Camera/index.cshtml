@@ -140,6 +140,23 @@
             Setup Views
         </a>
         
+        <a asp-action="?"
+           class="btn btn-sm btn-ffx"
+           style="background:#1e2550; 
+                  border:1px solid #330860; 
+                  color:#fafafa;
+                  display:flex; 
+                  align-items:center; 
+                  gap:8px;"
+           data-toggle="tooltip"
+           data-placement="top"
+           data-bs-target="#cameraGroupModal"
+           data-bs-toggle="modal"
+           title="Tooltip on top">
+            <img src="~/Images/liveviewconfig.png" alt="" width="45" height="45">
+            Camera Groups
+        </a>
+        
         <a asp-controller="User" 
            asp-action="Index" 
            class="btn btn-ffx" >
@@ -391,7 +408,6 @@
         Modal created for choosing your view configuration
     *@
 
-    <!-- The modal git-->
     <div class="modal fade" id="liveViewModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content bg-dark text-white">
@@ -414,9 +430,62 @@
                             onclick='location.href="@Url.Action("LiveView2x3", "Camera")"'>
                         2x3
                     </button>
+                    <button type="button" class="btn btn-sm btn-ffx"
+                            onclick='location.href="@Url.Action("LiveView2x4", "Camera")"'>
+                        2x4
+                    </button>
                     <button type="button" class="btn btn-sm btn-ffx" onclick="">Edit</button>
                     <button type="button" class="btn btn-sm btn-ffx"  onclick="">Delete</button>
                     <button type="button" class="btn btn-sm btn-ffx" data-bs-dismiss="modal">Cancel</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+    
+    
+    <div class="modal fade" id="cameraGroupModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Camera Groups</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    Select a camera from the drop down menu.
+                </div>
+
+                <div class="modal-footer">
+                    <form asp-action="Assign" method="post">
+                        <select
+                            name="cameraId"
+                            class="form-select mb-3"
+                            asp-items="ViewBag.Cameras">
+                            <option value="">-- Select Cam --</option>
+                        </select>
+                        
+                        
+                        <select
+                            name="groupId"
+                            class="form-select mb-3"
+                            asp-items="ViewBag.Groups">
+                            <option value="">-- Select Group --</option>
+                        </select>
+                        
+                        
+                        <button 
+                            type="submit" 
+                            class="btn btn-lg btn-ffx" >Assign
+                            </button>
+                        <a
+                            asp-action="AddCameraGroup"
+                            class="btn btn-lg btn-ffx" >Add New Group
+                            
+                        </a>
+                    </form>  
                 </div>
 
             </div>

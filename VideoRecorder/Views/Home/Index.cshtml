@@ -1,0 +1,176 @@
+@{
+    ViewData["Title"] = "igiEngine Home";
+}
+@model List<VideoRecorder.Models.User>
+
+
+<div style="display:flex;">
+    
+     @*********************************************** 
+    this is the entire tool bar starting at the div
+    
+    ***********************************************@
+    <div style="width:160px; 
+        min-width:160px; 
+        background:#0d1117; 
+        border-right:1px solid #330860; 
+        padding:16px 12px; 
+        display:flex; 
+        flex-direction:column; 
+        gap:8px;">
+
+        <p style="font-size:22px; 
+            color:#6e7a9a; 
+            text-transform:uppercase; 
+            letter-spacing:.07em;
+            padding-bottom:10px;
+            border-bottom:1px solid #1e2550;
+            margin:0;">Home
+        </p>
+        
+        <!-- Brings you to Camera/Index   -->
+        <a
+            asp-controller="Camera"
+            asp-action="Index"
+            class="btn btn-sm btn-ffx"
+            style="background:#1e2550; 
+                   border:1px solid #330860; 
+                   color:#fafafa;
+                   display:flex; 
+                   align-items:center; 
+                   gap:8px;">
+            <img src="~/Images/subnetscan.png" alt="" width="60" height="45">
+            My Cams
+        </a>
+
+        <!--Brings you to User/Index -->
+        <a asp-controller="User" 
+           asp-action="Index" 
+           class="btn btn-ffx" >
+            <img src="~/Images/users.png" alt="" width="45" height="45">
+            Users
+        </a>
+
+        <!--Brings you to Server/Index -->
+        <button type="button"
+           class="btn btn-sm btn-ffx"
+           style="background:#1e2550; 
+                  border:1px solid #330860; 
+                  color:#fafafa;
+                  display:inline-flex; 
+                  align-items:center; 
+                  gap:8px;"
+           data-bs-toggle="modal"
+           data-bs-target="#editUserModal">
+            <img src="~/Images/server.png" alt="" width="45" height="45">
+            Servers
+        </button>
+        
+
+        <!-- Brings you to Settings/Index   -->
+        <a
+            class="btn btn-sm btn-ffx"
+            style="background:#1e2550; 
+                   border:1px solid #330860; 
+                   color:#fafafa;
+                   display:flex; 
+                   align-items:center; 
+                   gap:8px;"
+            data-bs-toggle="modal"
+            data-bs-target="#discoverModalOnvif">
+            <img src="~/Images/wrench.png" alt="" width="45" height="45">
+            Tools
+        </a>
+
+        <!-- Clone user -->
+        <a
+            class="btn btn-sm btn-ffx"
+            style="background:#1e2550; 
+                   border:1px solid #330860; 
+                   color:#fafafa;
+                   display:flex; 
+                   align-items:center; 
+                   gap:8px;"
+            data-bs-toggle="modal"
+            data-bs-target="#discoverModal">
+            <img src="~/Images/playback.png" alt="" width="45" height="45">
+            Footage
+        </a>
+
+        
+        <a asp-controller="Account" 
+           asp-action="Logout" 
+           class="btn btn-ffx" >
+            <img src="~/Images/exit.png" alt="" width="60" height="45">
+            Logout
+        </a>
+    </div>
+    
+    
+   
+ <!-- main tyle grid layout -->
+
+
+<div class="launcher">
+
+  <h2 class="section-title">Operation</h2>
+  <div class="tile-grid">
+    <!-- swap the emoji for your own <img src="..."> or inline SVG -->
+    <button class="tile"><span class="tile-icon">🖥️</span>Monitoring</button>
+    <button class="tile"><span class="tile-icon">🗺️</span>Maps</button>
+    <button class="tile"><span class="tile-icon">🔔</span>Alarm monitoring</button>
+    <button class="tile"><span class="tile-icon">📊</span>Dashboards</button>
+    <button class="tile"><span class="tile-icon">❤️</span>Health dashboard</button>
+  </div>
+
+  <h2 class="section-title">Investigation</h2>
+  <div class="tile-grid">
+    <button class="tile"><span class="tile-icon">📁</span>Archives</button>
+    <button class="tile"><span class="tile-icon">🔖</span>Bookmarks</button>
+    <button class="tile"><span class="tile-icon">🏃</span>Motion search</button>
+    <button class="tile"><span class="tile-icon">📹</span>Camera events</button>
+    <button class="tile"><span class="tile-icon">🎞️</span>Video file explorer</button>
+  </div>
+
+</div>     
+
+
+</div>@* end tool bar   *@
+
+
+@* modal that gets generated for editing a user   *@
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit User</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body"> @* here is the dropdown that selects a user*@
+                <select id="userSelect" class="form-select">
+                    <option value="">--Select a user--</option>
+                    @foreach (var user in Model)
+                    {
+                        <option value="@user.Id">@user.Username</option>
+                    }
+                </select>
+
+            </div>
+            <div class="modal-footer">
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="editBtn" class="btn btn-primary" disabled>Edit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    const select = document.getElementById('userSelect');
+    const editBtn = document.getElementById('editBtn');
+    select.onchange = () => editBtn.disabled = !select.value;
+    editBtn.onclick = () => location.href = '/User/Edit/' + select.value;
+</script>
+
+
+

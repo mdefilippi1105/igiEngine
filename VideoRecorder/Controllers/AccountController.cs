@@ -65,7 +65,7 @@ public class AccountController : Controller
         var principal = new ClaimsPrincipal(identity);
         await HttpContext.SignInAsync(principal);
             
-        return RedirectToAction("Index", "Camera");
+        return RedirectToAction("Index", "Home");
         
         return View();
     }

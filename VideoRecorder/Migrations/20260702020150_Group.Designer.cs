@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VideoRecorder.Database;
 
@@ -11,9 +12,11 @@ using VideoRecorder.Database;
 namespace VideoRecorder.Migrations
 {
     [DbContext(typeof(VideoRecorderContext))]
-    partial class VideoRecorderContextModelSnapshot : ModelSnapshot
+    [Migration("20260702020150_Group")]
+    partial class Group
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -108,9 +111,6 @@ namespace VideoRecorder.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("IsEnabled")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -125,9 +125,6 @@ namespace VideoRecorder.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int?>("CameraGroupId")
-                        .HasColumnType("int");
 
                     b.Property<string>("Department")
                         .HasMaxLength(50)
@@ -167,8 +164,6 @@ namespace VideoRecorder.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CameraGroupId");
-
                     b.ToTable("User");
                 });
 
@@ -181,18 +176,9 @@ namespace VideoRecorder.Migrations
                     b.Navigation("CameraGroup");
                 });
 
-            modelBuilder.Entity("VideoRecorder.Models.User", b =>
-                {
-                    b.HasOne("VideoRecorder.Models.CameraGroup", null)
-                        .WithMany("Users")
-                        .HasForeignKey("CameraGroupId");
-                });
-
             modelBuilder.Entity("VideoRecorder.Models.CameraGroup", b =>
                 {
                     b.Navigation("Cameras");
-
-                    b.Navigation("Users");
                 });
 #pragma warning restore 612, 618
         }

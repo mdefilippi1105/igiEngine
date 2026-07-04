@@ -12,6 +12,7 @@ IMPORTANT: ICONS ARE 9090b8
     <meta name = "viewport" content = "width=device-width, initial-scale=1.0"/>
     <title>igiEngine</title>
     
+    
     <!-- load bootstrap -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
@@ -21,8 +22,11 @@ IMPORTANT: ICONS ARE 9090b8
 
 <body style="background-color: #0d1117;">
 <!-- Top navigation bar -->
-<nav class="navbar navbar-dark px-4" >
-    <a class="navbar-brand" href="/Camera"style="font-size: 2.5rem; font-family: 'JetBrains Mono'; letter-spacing: 0.1em;">igiEngine</a>
+<nav class="navbar navbar-dark px-4">
+    
+    <a class="navbar-brand" href="/Home"style="font-size: 2.5rem; font-family: 'JetBrains Mono'; letter-spacing: 0.1em;">
+        <img src="~/Images/igicircle.png" alt="" width="75" height="75">    igiEngine
+    </a>
 </nav>
 
 <!-- Every page's content gets injected here -->
@@ -87,6 +91,7 @@ IMPORTANT: ICONS ARE 9090b8
 
         body {
             background-color: #10163b;
+            
         }
         
         .navbar {
@@ -116,11 +121,20 @@ IMPORTANT: ICONS ARE 9090b8
         }
         .form-select {
             background: linear-gradient(to right, #2e2a55, #4a4080);
-            
+            font-family: system-ui;
             border: 1px solid #7a6fb0;
             border-radius: 6px;
             color: #ffffff;
             animation: fade-up 0.4s ease;
+        }
+        .form-select option {
+            background: #2e2a55;
+            color: #ffffff;
+        }
+
+        .form-select:focus {
+            border-color: #a99ce0;
+            outline: none;
         }
         
 
@@ -155,9 +169,78 @@ IMPORTANT: ICONS ARE 9090b8
 
         .modal-header {
             border-bottom: 0;
+            
         }
-        .modal-footer { 
-            border-top: 0; 
+        .modal-footer {
+            align-items: center;
+            display: flex;
+            margin-bottom: 12px;
+            flex-direction: row;
+            gap: 12px; 
+        }
+        .modal-footer form {
+            align-items: center;
+            width: 100%;
+        }
+
+        /* no body rule — it would override the whole site */
+        .launcher { 
+            flex:1; 
+            padding:8px 24px; }
+
+        .section-title {
+            color:#6e7a9a; 
+            font-size:22px; 
+            font-weight:400;
+            text-transform:uppercase; 
+            letter-spacing:.07em;   /* matches your "Users" header */
+            padding-bottom:8px; 
+            margin:20px 0 18px;
+            border-bottom:1px solid #330860;
+        }
+
+        .tile-grid {
+            display:grid;
+            grid-template-columns:repeat(auto-fill, 130px);   /* fill-as-many-as-fit, then wrap */
+            gap:14px 28px;
+        }
+
+        .tile {
+            animation: fade-up 0.4s ease;
+
+            display:flex; 
+            flex-direction:column; 
+            align-items:center; 
+            gap:8px;
+            background:none; 
+            border:none; 
+            color:#fafafa;
+            cursor:pointer; 
+            padding:6px; 
+            width:130px; 
+            font-size:14px; 
+            text-align:center;
+        }
+        .tile-icon {
+            width:64px; 
+            height:64px; 
+            border-radius:6px;
+            background:#1e2550; 
+            border:1px solid #330860;
+            display:flex; 
+            align-items:center; 
+            justify-content:center; 
+            font-size:30px;
+            transition:background .12s, border-color .12s;
+        }
+        .tile:hover .tile-icon {
+            animation: ffx-pulse 1s infinite;
+            background:#2a3470; 
+            border-color:#6e3fd1; 
+        }
+        .tile:focus-visible .tile-icon { 
+            outline:2px solid #6e3fd1; 
+            outline-offset:2px; 
         }
 
         @@keyframes ffx-pulse {

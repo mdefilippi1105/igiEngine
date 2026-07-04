@@ -1,0 +1,64 @@
+@* Tell this view it will receive a User object *@
+@using VideoRecorder.Models
+@model VideoRecorder.Models.CameraGroup
+
+<div class="container mt-4" style="max-width: 600px;">
+    
+    <h2 class="text-white">Create Camera Groups</h2>
+
+    @* asp-action= "Create" tells the form to POST to /Camera/Create *@
+    <form asp-action="AddCameraGroup" method="post" autocomplete="off">
+
+        <div class="mb-3 text-white">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" style="width: 220px;"/>
+        </div>
+
+        <select name="cameraId" id="camSelect" class="form-select mb-3"
+                asp-items="ViewBag.Cameras" onchange="addCam()">
+            <option value="">-- Select Cam --</option>
+        </select>
+
+        <div class="mb-3 d-flex align-items-center gap-2">
+            <input asp-for="IsEnabled" class="form-check-input" style="width: 1rem; height: 1rem;"/>
+            <label asp-for="IsEnabled" class="form-check-label"></label>
+        </div>
+
+        <button type="submit" class="btn btn-lg btn-ffx text-white">Save</button>
+        <a asp-action="Index" class="btn btn-lg btn-ffx text-white">Cancel</a>
+
+        <ul id="picked" class="list-group mt-3"></ul>
+    </form>
+    
+</div>
+
+<script>
+    
+    function addCam() {
+        const select = document.getElementById('camSelect');
+        if (!select.value)
+            return;
+        
+        // make a new listed item
+        const li = document.createElement('li');
+        
+        li.className = 'list-group-item';
+        
+        // select which option is picked. .text is the display name.
+        li.textContent = select.options[select.selectedIndex].text;
+
+        // hidden input so Save sends this pick
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'cameraIds';
+        hidden.value = select.value;
+        li.appendChild(hidden);
+        
+        // finds empty unlisted item and attaches new listed item
+        document.getElementById('picked').appendChild(li);
+        
+    }
+    
+</script>
+
+        
