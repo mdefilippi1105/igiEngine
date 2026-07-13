@@ -42,7 +42,7 @@ public class CameraController : Controller
     * this is the method that runs when someone visits /camera
     * async means it can wait for db without freezing app
     ***************************************************************************/
-    public async Task<IActionResult> Index(string sortBy = "Name")
+    public async Task<IActionResult> Index( int? groupId, string sortBy = "Name" ) // defaults go last, because C# fills arguments left to right
     {
         // fetch all cams and store to cameras.
         List<Camera> cameras = await _context.Camera.ToListAsync();
@@ -274,12 +274,11 @@ public class CameraController : Controller
 
         // all clear - connect to camera
         //////////////////////////////////
-        
         var url = $"rtsp://{camera.Username}:{camera.Password}@{camera.Host}{path}";
 
         stream.StreamDataTest(url, camera.Id); //connect to the camera
         
-            // add to list of streams
+        // add to list of streams
         SharedData.ActiveStreams[camera.Name] = streamId;
         SharedData.StreamCount++;
         Console.WriteLine(SharedData.ListStreams());
@@ -509,7 +508,7 @@ public class CameraController : Controller
      *  Ping device and ping subnet
      ************************************************************************/
 
-    public async Task<IActionResult> PingAddress(string ip)
+    public  IActionResult PingAddress(string ip)
     {
         if (string.IsNullOrEmpty(ip))
         {
@@ -520,7 +519,7 @@ public class CameraController : Controller
         var ping = new DevicePingTools();
         try
         {
-            ping.RunPing(ip);
+           if (ping.RunPing(ip))
             TempData["Success"] = "Ping successful to address " + ip;
         }
         catch(Exception e)
@@ -529,7 +528,7 @@ public class CameraController : Controller
             TempData["Error"] = "Ping failed.";
         } 
         
-        return RedirectToAction(nameof(Create));
+        return RedirectToAction(nameof(Index));
     } 
     
     /************************************************************************
@@ -598,7 +597,8 @@ public class CameraController : Controller
     public IActionResult Assign(Guid cameraId, int groupId)
     {
         var cam = _context.Camera.Find(cameraId);
-        cam.GroupId = groupId;
+        cam.CameraGroupId = groupId;
+        
         _context.SaveChanges();
         return RedirectToAction("Index");
     }
@@ -620,24 +620,43 @@ public class CameraController : Controller
         //make a new group. when we hit SaveChanges() it will generate and ID for us
         var group = new CameraGroup { Name = name };
         if (string.IsNullOrEmpty(name))
-            return RedirectToAction("Index");
+        {
+            TempData["Error"] = "Cannot be null. Please provide a valid name.";
+            return RedirectToAction("Index");  
+        }
+            
+        
         _context.CameraGroup.Add(group);
         _context.SaveChanges();
 
         foreach (var id in cameraIds)
         {
             var cam = _context.Camera.Find(id);
-            cam!.GroupId = group.Id;
+            cam!.CameraGroupId = group.Id;
         }
         _context.SaveChanges();
         return RedirectToAction("Index");
     }
-
-    public IActionResult ShowCameraGroups()
+    
+    
+    // this page renders the group assignments.
+    public IActionResult ViewGroupAssignments(int? groupId)
     {
-        var groups = _context.CameraGroup.Include(g => g.Cameras).ToList();
-        return View(groups);
+        ViewBag.AllGroups = _context.CameraGroup.ToList();
+        
+        // we use Include() here so each group has its own cameras. 
+        // no model needed. view reads from the ViewBag
+        var groups = _context.CameraGroup.Include(g => g.Cameras).AsQueryable();
+
+        if (groupId.HasValue)
+            groups = groups.Where(g => g.Id == groupId);
+
+        ViewBag.Groups = groups.ToList();
+        
+        return View();
     }
+    
+    
     
     
     

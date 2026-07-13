@@ -104,46 +104,7 @@
         </a>
 
 
-        <script>
-            function showPing() {
-                Swal.fire({
-                    title: 'Ping',
-                    input: 'text',
-                    inputPlaceholder: '192.168.1.1',
-                    background: '#1a1a2e',
-                    color: '#ffffff',
-                    showCancelButton: true,
-                    confirmButtonText: 'Ping'
-                }).then((result) => {
-                    // result is the data from the input field
-                    // if user hits confirm button:
-                    if (result.isConfirmed) {
-                        console.log(result.value);
-                        //return the ip to the URL. ?ip= is the value
-                        window.location.href = '/Camera/PingAddress?ip=' + result.value;
-                    }
-                })
-            }
 
-        document.getElementById('arpModal').addEventListener('shown.bs.modal',
-
-        async function showArp () {
-
-            const response = await fetch('/Camera/Arp/');
-            const devices = await response.json();
-            let html = '';
-
-            if (devices.length === 0) {
-                html = '<p> No devices found.</p>';
-            }
-
-            for (let i = 0; i < devices.length; i++)
-            {
-                html += '<p>' + devices[i] + '</p>';
-            }
-            document.getElementById('arpResults').innerHTML = html;
-        });
-    </script>
 
 
 

@@ -11,7 +11,7 @@
     
     ***********************************************@
     <div style="width:160px; 
-        min-width:160px; 
+        min-width:200px; 
         background:#0d1117; 
         border-right:1px solid #330860; 
         padding:16px 12px; 
@@ -74,24 +74,7 @@
             <img src="~/Images/deleteuser.png" alt="" width="45" height="45">
             Delete User
         </a>
-
-        <!-- Clone user -->
-        <a
-            class="btn btn-sm btn-ffx"
-            style="background:#1e2550; 
-                   border:1px solid #330860; 
-                   color:#fafafa;
-                   display:flex; 
-                   align-items:center; 
-                   gap:8px;"
-            data-bs-toggle="modal"
-            data-bs-target="#discoverModal">
-            <img src="~/Images/cloneuser.png" alt="" width="45" height="45">
-            Clone User
-        </a>
-
-
-
+        
         <!-- Back to cameras   -->
         <a
             asp-controller="Camera"
@@ -103,13 +86,32 @@
                    display:flex; 
                    align-items:center; 
                    gap:8px;">
-            <img src="~/Images/subnetscan.png" alt="" width="45" height="45">
+            <img src="~/Images/addcamera.png" alt="" width="45" height="45">
             Return to Cams
+        </a>
+        
+        <a asp-controller="Home" 
+           asp-action="Index" 
+           class="btn btn-ffx" 
+           style="background:#1e2550; 
+                  border:1px solid #330860; 
+                  color:#fafafa;
+                  display:flex; 
+                  align-items:center; 
+                  gap:8px;">
+            <img src="~/Images/home.png" alt="" width="45" height="45">
+            igiEngine Home
         </a>
         
         <a asp-controller="Account" 
            asp-action="Logout" 
-           class="btn btn-ffx" >
+           class="btn btn-ffx"
+           style="background:#1e2550; 
+                  border:1px solid #330860; 
+                  color:#fafafa;
+                  display:flex; 
+                  align-items:center; 
+                  gap:8px;">
             <img src="~/Images/exit.png" alt="" width="60" height="45">
             Logout
         </a>

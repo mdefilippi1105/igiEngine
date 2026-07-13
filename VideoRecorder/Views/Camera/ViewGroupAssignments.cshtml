@@ -1,0 +1,64 @@
+@using VideoRecorder.Models
+@model IEnumerable<VideoRecorder.Models.Camera>
+
+<div style="display:flex">
+    
+    @* this is our side bar *@
+    <div style="width:200px; 
+        min-width:200px; 
+        background:#0d1117; 
+        border-right:1px solid #330860; 
+        padding:16px 12px; 
+        display:flex; 
+        flex-direction:column; 
+        gap:8px;">
+
+        <p style="font-size:22px; 
+            color:#6e7a9a; 
+            text-transform:uppercase; 
+            letter-spacing:.07em;
+            padding-bottom:10px;
+            border-bottom:1px solid #1e2550;
+            margin:0;">Groups </p>
+        
+        <form method="get">
+            <p style="color:#c4c4f3; margin-bottom:4px;">Sort by</p>
+        
+            <select name="groupId"
+                    onchange="this.form.submit()"
+                    class="btn btn-sm btn-ffx"
+                    style="background:#1e2550; border:1px solid #330860; color:#fafafa;
+                    border-radius:4px; padding:4px 8px; width:180px;">
+                <option value="" disabled selected style="color:#888;">Group </option>
+                @foreach (var g in (List<CameraGroup>)ViewBag.AllGroups)
+                {
+                    <option value="@g.Id">@g.Name</option>
+                }
+
+            </select>
+        </form>
+
+    </div>
+
+    <div style="flex:1; padding:24px; max-width:900px">
+        
+        @foreach (var group in (List<CameraGroup>)ViewBag.Groups)
+        {
+            <div style="margin-bottom:40px;">
+                <h4 style="color:#7a88bb;">@group.Name</h4>
+                <table class="table table-dark">
+               
+                    <thead>
+                    <tr><th> Cameras </th></tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var cam in group.Cameras)
+                    {
+                        <tr><td>@cam.Name</td></tr>
+                    }
+                    </tbody>
+            </table>
+            </div> 
+        }
+    </div>
+</div>

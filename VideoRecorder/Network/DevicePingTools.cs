@@ -18,7 +18,7 @@ public class DevicePingTools
     private string? ip;
     
     //ping the retrieved ip address
-    public void RunPing(string address)
+    public bool RunPing(string address)
     {
         
         var ping = new Ping();
@@ -36,6 +36,8 @@ public class DevicePingTools
             Console.WriteLine($"Time to live {0}", reply.Options.Ttl);
             Console.WriteLine($"Status Code: {reply.Status}");
         }
+
+        return true;
     }
     
     public async Task <List<string>> ScanSubnet(string hostName)

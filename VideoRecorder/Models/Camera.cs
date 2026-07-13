@@ -71,7 +71,7 @@ public class Camera
     public DateTime CreatedAt { get; set; }
     
     
-    public int? GroupId { get; set; }
+    public int? CameraGroupId { get; set; }
     public CameraGroup? CameraGroup { get; set; }
     
     

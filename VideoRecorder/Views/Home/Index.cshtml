@@ -4,14 +4,14 @@
 @model List<VideoRecorder.Models.User>
 
 
-<div style="display:flex;">
+<div style="display:flex; ">
     
      @*********************************************** 
     this is the entire tool bar starting at the div
     
     ***********************************************@
-    <div style="width:160px; 
-        min-width:160px; 
+    <div style="width:200px; 
+        min-width:200px; 
         background:#0d1117; 
         border-right:1px solid #330860; 
         padding:16px 12px; 
@@ -38,33 +38,54 @@
                    color:#fafafa;
                    display:flex; 
                    align-items:center; 
-                   gap:8px;">
-            <img src="~/Images/subnetscan.png" alt="" width="60" height="45">
-            My Cams
+                   gap:15px;">
+            <img src="~/Images/cam.png" alt="" width="45" height="45">
+            Cams
         </a>
 
         <!--Brings you to User/Index -->
         <a asp-controller="User" 
            asp-action="Index" 
-           class="btn btn-ffx" >
+           class="btn btn-ffx"
+           style="background:#1e2550; 
+                  border:1px solid #330860; 
+                  color:#fafafa;
+                  display:inline-flex; 
+                  align-items:center; 
+                  gap:15px;">
             <img src="~/Images/users.png" alt="" width="45" height="45">
             Users
         </a>
 
         <!--Brings you to Server/Index -->
         <button type="button"
-           class="btn btn-sm btn-ffx"
-           style="background:#1e2550; 
+                class="btn btn-sm btn-ffx"
+                style="background:#1e2550; 
                   border:1px solid #330860; 
                   color:#fafafa;
                   display:inline-flex; 
                   align-items:center; 
-                  gap:8px;"
-           data-bs-toggle="modal"
-           data-bs-target="#editUserModal">
-            <img src="~/Images/server.png" alt="" width="45" height="45">
-            Servers
+                  gap:15px;"
+                data-bs-toggle="modal"
+                data-bs-target="#editUserModal">
+            <img src="~/Images/server_alt.png" alt="" width="45" height="45">
+            Server
         </button>
+        
+        <!-- recording servers -->
+        <a
+            class="btn btn-sm btn-ffx"
+            style="background:#1e2550; 
+                   border:1px solid #330860; 
+                   color:#fafafa;
+                   display:flex; 
+                   align-items:center; 
+                   gap:15px;"
+            data-bs-toggle="modal"
+            data-bs-target="#discoverModal">
+            <img src="~/Images/playback.png" alt="" width="45" height="45">
+            Play
+        </a>
         
 
         <!-- Brings you to Settings/Index   -->
@@ -75,34 +96,27 @@
                    color:#fafafa;
                    display:flex; 
                    align-items:center; 
-                   gap:8px;"
+                   gap:15px;"
             data-bs-toggle="modal"
             data-bs-target="#discoverModalOnvif">
             <img src="~/Images/wrench.png" alt="" width="45" height="45">
             Tools
         </a>
 
-        <!-- Clone user -->
-        <a
-            class="btn btn-sm btn-ffx"
-            style="background:#1e2550; 
-                   border:1px solid #330860; 
-                   color:#fafafa;
-                   display:flex; 
-                   align-items:center; 
-                   gap:8px;"
-            data-bs-toggle="modal"
-            data-bs-target="#discoverModal">
-            <img src="~/Images/playback.png" alt="" width="45" height="45">
-            Footage
-        </a>
+
 
         
         <a asp-controller="Account" 
            asp-action="Logout" 
-           class="btn btn-ffx" >
-            <img src="~/Images/exit.png" alt="" width="60" height="45">
-            Logout
+           class="btn btn-ffx" 
+           style="background:#1e2550; 
+                   border:1px solid #330860; 
+                   color:#fafafa;
+                   display:flex; 
+                   align-items:center; 
+                   gap:15px;">
+            <img src="~/Images/exit.png" alt="" width="45" height="45">
+            Exit
         </a>
     </div>
     
@@ -113,10 +127,24 @@
 
 <div class="launcher">
 
-  <h2 class="section-title">Operation</h2>
+  <h2 class="section-title">Quick Actions</h2>
   <div class="tile-grid">
     <!-- swap the emoji for your own <img src="..."> or inline SVG -->
-    <button class="tile"><span class="tile-icon">🖥️</span>Monitoring</button>
+    <a class="tile" asp-controller="Camera" asp-action="AddCamera">
+        <span class="tile-icon">
+            <img src="~/Images/addcamera.png" alt="" width="45" height="45">
+        </span>
+        Add Camera
+    </a>
+    
+    
+    
+    
+    
+    
+    
+    
+    
     <button class="tile"><span class="tile-icon">🗺️</span>Maps</button>
     <button class="tile"><span class="tile-icon">🔔</span>Alarm monitoring</button>
     <button class="tile"><span class="tile-icon">📊</span>Dashboards</button>
