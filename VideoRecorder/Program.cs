@@ -63,6 +63,9 @@ using VideoRecorder.Services;
     // create one instance of this class per HTTP request and then destroy it
     builder.Services.AddScoped<AltOnvifDiscovery>();
     
+    // create one instance of the recording service
+    builder.Services.AddSingleton<RecordingService>();
+    
     // create an instance of IPasswordHasher; create during the HTTP request and then toss it
     // request the IPasswordHasher interface, initiate the PasswordHasher method
     builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();

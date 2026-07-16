@@ -22,7 +22,7 @@ public class StreamVideo : IDisposable
     {
             _fProcess = new Process();
             // verbose logs for seeing everything, rtsp transport over tcp, point to the rtsp address
-            _fProcess.StartInfo.FileName = "/Users/michaeldefilippi/RiderProjects/VideoRecorder/VideoRecorder/Services/ffmpeg";
+            _fProcess.StartInfo.FileName = "/Users/michaeldefilippi/RiderProjects/VideoRecorder/VideoRecorder/ThirdParty/ffmpeg";
             _fProcess.StartInfo.Arguments = $"-hide_banner " +
                                            $"-loglevel verbose " +
                                            $"-rtsp_transport tcp -i \"{filename}\" " +
@@ -40,6 +40,7 @@ public class StreamVideo : IDisposable
             _fProcess.ErrorDataReceived += (sender, e) => Console.WriteLine(e.Data);
             _fProcess.BeginErrorReadLine();
             
+            // here we are adding the cam id to our dictionary
             SharedData.StreamObjects[cameraId.ToString()] = this;
         
     }
@@ -61,8 +62,8 @@ public class StreamVideo : IDisposable
     public bool StartMediaMtx()
     {
         Process mediaProcess = new Process();
-        mediaProcess.StartInfo.FileName = "/Users/michaeldefilippi/RiderProjects/VideoRecorder/VideoRecorder/Services/mediamtx";
-        mediaProcess.StartInfo.WorkingDirectory = "/Users/michaeldefilippi/RiderProjects/VideoRecorder/VideoRecorder/Services";
+        mediaProcess.StartInfo.FileName = "/Users/michaeldefilippi/RiderProjects/VideoRecorder/VideoRecorder/ThirdParty/mediamtx";
+        mediaProcess.StartInfo.WorkingDirectory = "/Users/michaeldefilippi/RiderProjects/VideoRecorder/VideoRecorder/ThirdParty";
         mediaProcess.StartInfo.RedirectStandardError = true;
         mediaProcess.StartInfo.UseShellExecute = false;
         mediaProcess.ErrorDataReceived += (sender, e) => Console.WriteLine(e.Data);

@@ -22,6 +22,8 @@ appsettings.Local.json
 # Binaries in Services/ - these are executables, not source
 Services/ffmpeg
 Services/mediamtx
+ThirdParty/mediamtx
+ThirdParty/ffmpeg
 
 # MediaMTX config can contain sensitive paths/ports (optional - include if it has local-only settings)
 Services/mediamtx.yml

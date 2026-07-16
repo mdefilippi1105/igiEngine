@@ -24,18 +24,25 @@ namespace VideoRecorder.Controllers;
 [Authorize]
 public class CameraController : Controller 
 {
-    //var to hold the database connection
+    // the tools this controller needs. we store these as fields so 
+    // every action method can reach them. 
     private readonly VideoRecorderContext _context;
     private readonly AltOnvifDiscovery _discovery;
     private readonly ILogger<CameraController> _logger;
+    private readonly RecordingService _recording;
 
 
-    
-    public CameraController(VideoRecorderContext context, AltOnvifDiscovery discovery, ILogger<CameraController> logger)
+    // the 3 shared services that all requests talk to
+    // these are all registered at Program.CS
+    public CameraController(VideoRecorderContext context, 
+                            AltOnvifDiscovery discovery, 
+                            ILogger<CameraController> logger,
+                            RecordingService recording)
     {
         _context = context;
         _discovery = discovery;
         _logger = logger;
+        _recording = recording;
     }
     
     /***************************************************************************
@@ -232,11 +239,10 @@ public class CameraController : Controller
             Console.WriteLine(data);
             connectionTimer.Stop();
         }
-        else if (connectionTimer.ElapsedMilliseconds > 7000)
+        // set a timer for 9 seconds...10 seems excessive
+        else if (connectionTimer.ElapsedMilliseconds > 9000)
         {
-            TempData["ConnectFail"] = $"Could not reach {camera.Host}. " +
-                                      "Please check network connection or " +
-                                      "try the built in ping tool.";
+            TempData["ConnectFail"] = $"Could not reach {camera.Host}. " + "Please check network connection or " + "try the built in ping tool.";
         }
         
         else
@@ -279,9 +285,16 @@ public class CameraController : Controller
         stream.StreamDataTest(url, camera.Id); //connect to the camera
         
         // add to list of streams
-        SharedData.ActiveStreams[camera.Name] = streamId;
+        SharedData.ActiveStreams[camera.Name!] = streamId;
         SharedData.StreamCount++;
         Console.WriteLine(SharedData.ListStreams());
+        
+        // TEST WARNING DO NOT STORE HERE
+        // TEST WARNING DO NOT STORE HERE
+        // TEST WARNING DO NOT STORE HERE
+        // TEST WARNING DO NOT STORE HERE
+        _recording.Start(camera.Id, url);
+        
         
         return RedirectToAction(nameof(LiveView), new { id = id });
     }
@@ -304,7 +317,6 @@ public class CameraController : Controller
             stream.Dispose();
             
             SharedData.ActiveStreams.TryRemove(id, out _);
-            
         }
         return Ok();
     }
@@ -321,14 +333,10 @@ public class CameraController : Controller
         var host = camera.Host ?? new Uri(camera.RtspUrl!).Host;
         if (string.IsNullOrEmpty(host)) return Task.FromResult(false);
         
-        
         var ping = new Ping();
         var reply = ping.Send(host, 1000);
         
-
-
         return Task.FromResult(reply.Status == IPStatus.Success);
-
     }
     
         /***********************************************************************
@@ -353,7 +361,6 @@ public class CameraController : Controller
                 {
                     Console.WriteLine("oops");
                 }
-
             }
             return false;
         }

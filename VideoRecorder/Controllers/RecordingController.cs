@@ -1,0 +1,91 @@
+using Microsoft.AspNetCore.Mvc;
+using VideoRecorder.Database;
+using VideoRecorder.Services;
+
+namespace VideoRecorder.Controllers;
+
+public class RecordingController : Controller
+{
+    // the tools this controller needs. we store these as fields so 
+    // every action method can reach them.
+    private readonly VideoRecorderContext _context;
+    private readonly RecordingService _recording;
+    private readonly ILogger<RecordingController> _logger;
+    
+    
+    // the 3 shared services that all requests talk to
+    // these are all registered at Program.CS
+    public RecordingController(VideoRecorderContext context, 
+                               ILogger<RecordingController> logger,
+                               RecordingService recording)
+    {
+        _context = context;
+        _recording = recording;
+        _logger = logger;
+    }
+
+    // grab the camera id and start recording 
+    [HttpPost]
+    public async Task<IActionResult> StartRecording(Guid cameraId)
+    {
+        var camera = await _context.Camera.FindAsync(cameraId);
+        var url = $"rtsp://{camera!.Username}:{camera.Password}@{camera.Host}{camera.Path}";
+        
+        
+        // guard checks
+        if (camera! == null || !camera.IsEnabled || !camera.IsOnline)
+            return NotFound();
+        
+        _logger.LogInformation("Starting recording for {CameraName}", camera.Name);
+        
+        _recording.Start(camera.Id, url);
+        return Ok();
+
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> StopRecording(Guid cameraId)
+    {
+        var camera = await _context.Camera.FindAsync(cameraId);
+        if (camera == null)
+            return NotFound();
+        
+        _logger.LogInformation("Stopping recording for {CameraName}", camera.Name);
+        
+        _recording.Stop(camera.Id);
+        return Ok();
+        
+    }
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
