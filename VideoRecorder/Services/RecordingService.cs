@@ -26,12 +26,19 @@ public class RecordingService
                                             $"-c copy " +
                                             $"-f segment -segment_time 300 " +
                                             $"-reset_timestamps 1 -strftime 1 " +
+                                            $"-segment_format_options movflags=+frag_keyframe+empty_moov " +
                                             $"\"{recordingDirectory}/%Y%m%d_%H%M%S.mp4\"";
+        recordProcess.StartInfo.RedirectStandardInput = true;
         recordProcess.StartInfo.UseShellExecute = false;
         recordProcess.StartInfo.CreateNoWindow = true;
         
+        
+        
         // lastly we add the id and the process to the dictionary
         _recordings.TryAdd(cameraId, recordProcess);
+        
+        // start the recordings
+        recordProcess.Start();
     }
     
     
@@ -42,7 +49,10 @@ public class RecordingService
     {
         if (_recordings.TryRemove(cameraId, out var process))
         {
-            process.Kill();
+            //simulate hitting q - shuts down the process clean
+            process.StandardInput.Write("q");
+            
+            process.WaitForExit(5000);
             process.Dispose();
         }
     }

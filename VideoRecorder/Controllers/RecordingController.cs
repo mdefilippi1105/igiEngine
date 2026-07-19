@@ -54,7 +54,28 @@ public class RecordingController : Controller
         
         _recording.Stop(camera.Id);
         return Ok();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ToggleRecording(Guid id)
+    {
+        var cam  = await _context.Camera.FindAsync(id);
         
+        if (cam == null)
+            return NotFound();
+        
+        //this makes sure the bool is flipped in memory
+        // flip it to the opposite of whatever it is now
+        cam.IsRecording = !cam.IsRecording;
+        
+        if (cam.IsRecording)
+            await StartRecording(cam.Id);
+        if (!cam.IsRecording)
+            await StopRecording(cam.Id);
+        
+        await _context.SaveChangesAsync();
+
+        return RedirectToAction("Index", "Camera");
     }
 
 

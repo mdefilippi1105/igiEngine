@@ -289,11 +289,7 @@ public class CameraController : Controller
         SharedData.StreamCount++;
         Console.WriteLine(SharedData.ListStreams());
         
-        // TEST WARNING DO NOT STORE HERE
-        // TEST WARNING DO NOT STORE HERE
-        // TEST WARNING DO NOT STORE HERE
-        // TEST WARNING DO NOT STORE HERE
-        _recording.Start(camera.Id, url);
+       
         
         
         return RedirectToAction(nameof(LiveView), new { id = id });

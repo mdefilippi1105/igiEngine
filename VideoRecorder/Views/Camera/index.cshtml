@@ -231,10 +231,12 @@
             <th style="width:150px;">Description</th>
             <th style="width:150px;">Enabled</th>
             <th style="width:150px;">Protocol</th>
+            <th style="width:120px;">Online</th>
+            <th style="width:150px;">Recording</th>
             <th style="width:150px;">Live</th>
             <th style="width:150px;">Edit</th>
             <th style="width:150px;">Delete</th>
-            <th style="width:150px;">Online</th>
+            
         </tr>
         </thead>
         
@@ -248,7 +250,6 @@
         
         @foreach (var camera in Model)
         {
-            
             <tr>
                 <input type="hidden" name="Id" value="@camera.Id"/>
                 <td>@camera.Name</td>
@@ -278,6 +279,30 @@
                     {
                         <span style="color: #64d01c; background: transparent;border: 1px solid #64d01c; font-family: 'Courier New', monospace;" class="badge ">STREAM</span>
                     }
+                </td>
+                <td>
+                    <span id="status-@camera.Id" class="dot"> </span>
+                </td>
+                
+                <td>
+                    <form
+                        asp-controller="Recording"
+                        asp-action="ToggleRecording"
+                        asp-route-id="@camera.Id"
+                        method="post"
+                        class="d-inline">
+                    <button
+                        class="btn btn-sm btn-ffx"
+                        style="background:#1e2550;
+                        border:1px solid #330860;
+                        color:#fafafa;
+                        width: 75px;"
+                        button type="submit">
+                        @* we  put  the @ sign here to run c# commands withing this line*@
+                        <img src="~/Images/@(camera.IsRecording ? "record-on.png" : "record-off.png")"
+                             class="@(camera.IsRecording ? "pulse" : "")" alt="" width="30" height="30">
+                    </button>
+                    </form>
                 </td>
                 
                 
@@ -341,9 +366,7 @@
                         <img src="~/Images/delete.png" alt="" width="30" height="30">
                     </a>
                 </td>
-                <td>
-                    <span id="status-@camera.Id" class="dot"> </span>
-                </td>
+
                 
             </tr>
         }
@@ -694,6 +717,28 @@
             
         })
     </script>
+    
+    @*This checks each camera for the online status.*@
+    <script>
+        document.querySelectorAll('.record-dot').forEach(async dot => {
+            const id = dot.id.replace('status-', '');
+            const response = await fetch('/Camera/StreamStatus/' + id);
+            const data = await response.json();
+            
+            if (data.ready) {
+                dot.classList.add('online'); // if ready the span class becomes dot.online
+            } else {
+                dot.classList.add('offline'); // or dot.offline. diff CSS colors for each
+            }    
+            
+        })
+    </script>
+    
+    
+    
+    
+    
+    
     
     <script>
             function showPing() {
