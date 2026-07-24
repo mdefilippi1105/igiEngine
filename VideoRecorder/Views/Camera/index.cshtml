@@ -292,15 +292,15 @@
                         method="post"
                         class="d-inline">
                     <button
-                        class="btn btn-sm btn-ffx"
+                        class="btn btn-sm btn-ffx @(camera.IsRecording && camera.IsOnline ? "pulse-red-recording" : "")"
                         style="background:#1e2550;
                         border:1px solid #330860;
                         color:#fafafa;
                         width: 75px;"
                         button type="submit">
-                        @* we  put  the @ sign here to run c# commands withing this line*@
+                        @* we  put  the @ sign here to run c# commands within this line*@
                         <img src="~/Images/@(camera.IsRecording ? "record-on.png" : "record-off.png")"
-                             class="@(camera.IsRecording ? "pulse" : "")" alt="" width="30" height="30">
+                             alt="" width="30" height="30">
                     </button>
                     </form>
                 </td>
@@ -707,13 +707,12 @@
             const response = await fetch('/Camera/StreamStatus/' + id);
             const data = await response.json();
 
-            @* dot.classList.remove('online', 'offline'); // clear out the old state *@
-            
-            if (data.ready) {
-                dot.classList.add('online'); // if ready the span class becomes dot.online
-            } else {
-                dot.classList.add('offline'); // or dot.offline. diff CSS colors for each
-            }    
+            // clear out the old state 
+            dot.classList.remove('online', 'offline');
+            dot.classList.add(data.ready ? 'online' : 'offline');
+
+            const btn = document.getElementById('record-' + id);
+            btn.classList.toggle('pulse-red-recording', data.ready && data.recording);   
             
         })
     </script>

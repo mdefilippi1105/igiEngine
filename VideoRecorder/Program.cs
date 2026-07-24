@@ -70,6 +70,9 @@ using VideoRecorder.Services;
     // request the IPasswordHasher interface, initiate the PasswordHasher method
     builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
+    //register the health check service
+    builder.Services.AddHostedService<CameraHealthService>();
+
     var app = builder.Build(); //build it
 
 

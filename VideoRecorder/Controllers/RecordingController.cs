@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using VideoRecorder.Database;
+using VideoRecorder.Migrations;
+using VideoRecorder.Models;
 using VideoRecorder.Services;
 
 namespace VideoRecorder.Controllers;
@@ -31,7 +33,6 @@ public class RecordingController : Controller
         var camera = await _context.Camera.FindAsync(cameraId);
         var url = $"rtsp://{camera!.Username}:{camera.Password}@{camera.Host}{camera.Path}";
         
-        
         // guard checks
         if (camera! == null || !camera.IsEnabled || !camera.IsOnline)
             return NotFound();
@@ -56,6 +57,7 @@ public class RecordingController : Controller
         return Ok();
     }
 
+    
     [HttpPost]
     public async Task<IActionResult> ToggleRecording(Guid id)
     {
@@ -64,15 +66,10 @@ public class RecordingController : Controller
         if (cam == null)
             return NotFound();
         
-        //this makes sure the bool is flipped in memory
+        // this makes sure the bool is flipped in memory
         // flip it to the opposite of whatever it is now
-        cam.IsRecording = !cam.IsRecording;
-        
-        if (cam.IsRecording)
-            await StartRecording(cam.Id);
-        if (!cam.IsRecording)
-            await StopRecording(cam.Id);
-        
+        cam.UserToggledRecording = !cam.UserToggledRecording;
+        _recording.RecordingAuthorize(cam);
         await _context.SaveChangesAsync();
 
         return RedirectToAction("Index", "Camera");

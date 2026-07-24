@@ -91,7 +91,6 @@ IMPORTANT: ICONS ARE 9090b8
 
         body {
             background-color: #10163b;
-            
         }
         
         .navbar {
@@ -248,6 +247,8 @@ IMPORTANT: ICONS ARE 9090b8
             50%      { box-shadow: 0 0 0 3px rgb(102, 85, 204); }
         }
         
+        
+        
         @@keyframes fade-up {
             from { opacity: 0; transform: translateY(30px); }
             to   { opacity: 1; transform: translateY(0); }
@@ -262,6 +263,17 @@ IMPORTANT: ICONS ARE 9090b8
         @@keyframes pulse-red {
             0%, 100% { box-shadow: 0 0 0 0 rgba(255, 43, 66, 0.7); }
             70%      { box-shadow: 0 0 0 8px rgba(255, 0, 0, 0); }
+        }
+        
+        .pulse-red-recording {
+            border: 1px solid #ff2b42 !important;   /* overrides your inline border */
+            box-shadow: 0 0 0 0 rgba(255, 43, 66, 0);  /* explicit start state */
+            transition: none !important;
+            animation: pulse-red 2s ease-in-out infinite;
+        }
+        @@keyframes pulse-red-recording {
+            0%   { box-shadow: 0 0 0 0 rgba(255, 43, 66, 0.5); }
+            100% { box-shadow: 0 0 0 6px rgba(255, 43, 66, 0); }
         }
     </style>
     

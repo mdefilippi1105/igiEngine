@@ -316,62 +316,22 @@ public class CameraController : Controller
         }
         return Ok();
     }
+    
     /***********************************************************************
      * when you log in ping all cams
      ************************************************************************/
-
-    public Task<bool> SendAsyncHealthCheck(Guid id)
-    {
-        var camera = _context.Camera.Find(id);
-        if (camera == null) return Task.FromResult(false);
-        
-        // use camera.Host if it's not null, else parse RtspUrl and pull host out of it
-        var host = camera.Host ?? new Uri(camera.RtspUrl!).Host;
-        if (string.IsNullOrEmpty(host)) return Task.FromResult(false);
-        
-        var ping = new Ping();
-        var reply = ping.Send(host, 1000);
-        
-        return Task.FromResult(reply.Status == IPStatus.Success);
-    }
-    
-        /***********************************************************************
-         * repurposed method to check camera stream health
-         ************************************************************************/
-        private async Task<bool> IsStreamReady(Guid id)
-        {
-            using var http = new HttpClient();
-            http.Timeout = TimeSpan.FromMilliseconds(500);
-            var deadline = DateTime.UtcNow.AddSeconds(5);
-
-            while (DateTime.UtcNow < deadline)
-            {
-                try
-                {
-                    await Task.Delay(1000);
-                    var response = await http.GetAsync($"http://localhost:8888/live/{id}/index.m3u8");
-                    if (response.IsSuccessStatusCode)
-                        return true;
-                }
-                catch (TaskCanceledException)
-                {
-                    Console.WriteLine("oops");
-                }
-            }
-            return false;
-        }
+ 
         
     /*****************************************************************
      * Call IsStreamReady and return bool "ready"
      *****************************************************************/
     public async Task<IActionResult> StreamStatus(Guid id)
     {
+        var cam = await _context.Camera.FindAsync(id);
+        if (cam == null)
+            return NotFound();
         
-        bool ready = await SendAsyncHealthCheck(id);
-        var cam = _context.Camera.Find(id);
-        cam!.IsOnline = ready;
-        await _context.SaveChangesAsync();
-        return Json(new { ready });
+        return Json(new { ready  = cam.IsOnline, recording = cam.IsRecording });
     }
         
     /*****************************************************************
@@ -491,7 +451,7 @@ public class CameraController : Controller
                 Path = uri.AbsolutePath,
 
                 // if the array has 1 element, take the first one: username
-                // if the array has atleast 2 elements, take the second one: password
+                // if the array has at least 2 elements, take the second one: password
                 // the reason for this is if there is no user creds in the string
                 // so splitting on ":" with empty string will get IndexOutOfBounds
                 Username = userInfo.Length > 0 ? userInfo[0] : null,
@@ -581,6 +541,9 @@ public class CameraController : Controller
     {
         public string Ip { get; set; }
     }
+    
+    
+    
     /************************************************************************
      * Group Assignment Methods
      * The basic flow is: pick a camera, pick a group, submit
@@ -658,10 +621,6 @@ public class CameraController : Controller
         
         return View();
     }
-    
-    
-    
-    
     
     
 }    

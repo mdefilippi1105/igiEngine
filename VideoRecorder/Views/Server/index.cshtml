@@ -58,8 +58,7 @@
         </a>
 
         <!--Brings you to Server/Index -->
-        <a asp-controller="Server"
-           asp-action="Index"
+        <button type="button"
                 class="btn btn-sm btn-ffx"
                 style="background:#1e2550; 
                   border:1px solid #330860; 
@@ -71,7 +70,7 @@
                 data-bs-target="#editUserModal">
             <img src="~/Images/server_alt.png" alt="" width="45" height="45">
             Server
-        </a>
+        </button>
         
         <!-- recording servers -->
         <a
@@ -165,40 +164,6 @@
 
 </div>@* end tool bar   *@
 
-
-@* modal that gets generated for editing a user   *@
-<div class="modal fade" id="editUserModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content bg-dark text-white">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit User</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body"> @* here is the dropdown that selects a user*@
-                <select id="userSelect" class="form-select">
-                    <option value="">--Select a user--</option>
-                    @foreach (var user in Model)
-                    {
-                        <option value="@user.Id">@user.Username</option>
-                    }
-                </select>
-
-            </div>
-            <div class="modal-footer">
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" id="editBtn" class="btn btn-primary" disabled>Edit</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<script>
-    const select = document.getElementById('userSelect');
-    const editBtn = document.getElementById('editBtn');
-    select.onchange = () => editBtn.disabled = !select.value;
-    editBtn.onclick = () => location.href = '/User/Edit/' + select.value;
-</script>
 
 
 

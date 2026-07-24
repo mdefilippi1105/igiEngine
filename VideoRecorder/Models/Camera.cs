@@ -29,7 +29,7 @@ public class Camera
     
     [StringLength(100)]
     [Display(Name = "IP Address")]
-    //regex to make sure its a valid IP
+    //regex to make sure it's a valid IP
     [RegularExpression(@"^(\d{1,3}\.){3}\d{1,3}$", ErrorMessage = "Must be a valid IP")]
     public string? Host { get; set; }
     
@@ -75,5 +75,7 @@ public class Camera
     public CameraGroup? CameraGroup { get; set; }
     
     public bool IsRecording { get; set; }
+    
+    public bool UserToggledRecording { get; set; }
     
 }
