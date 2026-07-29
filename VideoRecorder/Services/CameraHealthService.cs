@@ -17,7 +17,15 @@ namespace VideoRecorder.Services;
  ****************************************************/
 public class CameraHealthService : BackgroundService
 {
-    public async Task<bool> SendAsyncHealthCheck(Camera camera)
+    
+    
+    // service is a singleton, 
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly RecordingService _recording;
+    private readonly ILogger<CameraHealthService> _logger;
+    
+    
+    public static async Task<bool> SendAsyncHealthCheck(Camera camera)
     {
         try
         {
@@ -28,6 +36,7 @@ public class CameraHealthService : BackgroundService
             var host = camera.Host ?? new Uri(camera.RtspUrl!).Host;
             if (string.IsNullOrEmpty(host))
                 return false;
+            
 
             // set to using to implement IDisposable
             using var ping = new Ping();
@@ -39,16 +48,10 @@ public class CameraHealthService : BackgroundService
         catch
         {
             return  false;
-
-            
         }
         
     }
 
-    // service is a singleton, 
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly RecordingService _recording;
-    private readonly ILogger<CameraHealthService> _logger;
 
     public CameraHealthService(IServiceScopeFactory scopeFactory,
         RecordingService recording,
@@ -68,7 +71,7 @@ public class CameraHealthService : BackgroundService
             // dispose it when finished.
             using var scope = _scopeFactory.CreateScope();
             
-            // make a new instance, dont remember everything the main Dbcontext loads
+            // make a new instance, don't remember everything the main Dbcontext loads
             // then make a fresh connection then return it on dispose()
             var context = scope.ServiceProvider.GetRequiredService<VideoRecorderContext>();
 
@@ -80,6 +83,7 @@ public class CameraHealthService : BackgroundService
             
             await context.SaveChangesAsync(stopToken);
             await Task.Delay(5000, stopToken);
+            
         }
         
     }

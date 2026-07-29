@@ -56,7 +56,6 @@ public class RecordingController : Controller
         _recording.Stop(camera.Id);
         return Ok();
     }
-
     
     [HttpPost]
     public async Task<IActionResult> ToggleRecording(Guid id)

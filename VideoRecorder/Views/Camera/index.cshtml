@@ -661,7 +661,7 @@
     *@
     
     <script>
-        async function runOnvifDiscover () {
+        async function runOnvifDiscover() {
             
             const username = document.getElementById('onvifUsername').value;
             const password = document.getElementById('onvifPassword').value;
@@ -700,7 +700,7 @@
         
     </script>
     
-    @*This checks each camera for the online status.*@
+    @*This checks each camera for the ONLINE status.*@
     <script>
         document.querySelectorAll('.dot').forEach(async dot => {
             const id = dot.id.replace('status-', '');
@@ -717,7 +717,7 @@
         })
     </script>
     
-    @*This checks each camera for the online status.*@
+    @*This checks each camera for the RECORDING status.*@
     <script>
         document.querySelectorAll('.record-dot').forEach(async dot => {
             const id = dot.id.replace('status-', '');

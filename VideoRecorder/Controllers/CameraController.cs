@@ -289,8 +289,6 @@ public class CameraController : Controller
         SharedData.StreamCount++;
         Console.WriteLine(SharedData.ListStreams());
         
-       
-        
         
         return RedirectToAction(nameof(LiveView), new { id = id });
     }

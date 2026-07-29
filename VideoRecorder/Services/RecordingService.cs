@@ -63,36 +63,48 @@ public class RecordingService
     // if cameraId comes back false, out var process is null
     public void Stop(Guid cameraId)
     {
-        if (_recordings.TryRemove(cameraId, out var process))
+        if (!_recordings.TryRemove(cameraId, out var process))
+            return;
+        try
         {
-            //simulate hitting q - shuts down the process clean
-            process.StandardInput.Write("q");
-            //flush out the buffer
-            process.StandardInput.Flush();
-            
-            if (!process.WaitForExit(1000))
-                process.Kill(entireProcessTree: true);
+            if (!process.HasExited)
+            {
+                //simulate hitting q - shuts down the process clean
+                process.StandardInput.Write("q");
+                //flush out the buffer
+                process.StandardInput.Flush();
+
+                if (!process.WaitForExit(1000))
+                    process.Kill(entireProcessTree: true);
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+        finally
+        {
             process.Dispose();
         }
+        
     }
     
     // allow recording if the user enabled recording button, the cam is online,
     // and the camera is enabled.
-    public void RecordingAuthorize(Camera cam)
+    public void RecordingAuthorize(Camera camera)
     {
-        var recordingAllowed = cam.UserToggledRecording && cam.IsOnline && cam.IsEnabled;
+        var recordingAllowed = camera.UserToggledRecording && camera.IsOnline && camera.IsEnabled;
 
-        if (recordingAllowed && !cam.IsRecording)
+        if (recordingAllowed && !camera.IsRecording)
         {
-            var url = $"rtsp://{Uri.EscapeDataString(cam.Username!)}:" +
-                            $"{Uri.EscapeDataString(cam.Password!)}@{cam.Host}{cam.Path}";
-            Start(cam.Id, url);
-            cam.IsRecording = true;
+            var url = $"rtsp://{camera!.Username}:{camera.Password}@{camera.Host}{camera.Path}";
+            Start(camera.Id, url);
+            camera.IsRecording = true;
         }
-        else if (!recordingAllowed && cam.IsRecording)
+        else if (!recordingAllowed && camera.IsRecording)
         {
-            Stop(cam.Id);
-            cam.IsRecording = false;
+            Stop(camera.Id);
+            camera.IsRecording = false;
         }
     }
 }
