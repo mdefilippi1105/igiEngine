@@ -74,8 +74,15 @@ public class Camera
     
     public CameraGroup? CameraGroup { get; set; }
     
+    /*********************************************
+     * Recording settings and retention
+     **********************************************/
     public bool IsRecording { get; set; }
     
     public bool UserToggledRecording { get; set; }
-    
+
+    // we are keeping the default retention at 30, this can be selected via camera edit page
+    public int RetentionDays { get; set; } = 30;
+
+
 }

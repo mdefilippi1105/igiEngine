@@ -40,6 +40,7 @@ public class RecordingController : Controller
         _logger.LogInformation("Starting recording for {CameraName}", camera.Name);
         
         _recording.Start(camera.Id, url);
+        
         return Ok();
 
     }
@@ -60,15 +61,18 @@ public class RecordingController : Controller
     [HttpPost]
     public async Task<IActionResult> ToggleRecording(Guid id)
     {
-        var cam  = await _context.Camera.FindAsync(id);
+        var camera  = await _context.Camera.FindAsync(id);
         
-        if (cam == null)
+        if (camera == null)
             return NotFound();
         
         // this makes sure the bool is flipped in memory
         // flip it to the opposite of whatever it is now
-        cam.UserToggledRecording = !cam.UserToggledRecording;
-        _recording.RecordingAuthorize(cam);
+        camera.UserToggledRecording = !camera.UserToggledRecording;
+        
+        _logger.LogInformation("Recording toggled for {CameraName}", camera.Name);
+        
+        _recording.RecordingAuthorize(camera);
         await _context.SaveChangesAsync();
 
         return RedirectToAction("Index", "Camera");

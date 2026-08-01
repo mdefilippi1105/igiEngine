@@ -42,12 +42,23 @@
             <label asp-for="RtspUrl" class="form-label"></label>
             <input asp-for="RtspUrl" class="form-control" style="width: 220px;" />
         </div>
+        
+        <div class="mb-3">
+            <label asp-for="RetentionDays" class="form-label">Recording Retention Time</label>
+            <select asp-for="RetentionDays" class="form-select" style="width: 140px;">
+                <option value="7">7 days</option>
+                <option value="14">14 days</option>
+                <option value="30">30 days</option>
+                <option value="90">90 days</option>
+            </select>
+        </div>
 
         @* Enabled checkbox *@
         <div class="mb-3 d-flex align-items-center gap-2">
             <input asp-for="IsEnabled" class="form-check-input" style="width: 1rem; height: 1rem;" />
             <label asp-for="IsEnabled" class="form-check-label"></label>
         </div>
+        
 
         @* Buttons *@
         <button 

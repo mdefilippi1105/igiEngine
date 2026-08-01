@@ -99,6 +99,7 @@ public class RecordingService
         {
             var url = $"rtsp://{camera!.Username}:{camera.Password}@{camera.Host}{camera.Path}";
             Start(camera.Id, url);
+            
             camera.IsRecording = true;
         }
         else if (!recordingAllowed && camera.IsRecording)
@@ -107,4 +108,15 @@ public class RecordingService
             camera.IsRecording = false;
         }
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 }
