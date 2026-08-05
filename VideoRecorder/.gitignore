@@ -56,3 +56,6 @@ recorder_engine.txt
 #weird notes
 notes.text
 
+.idea/
+wwwroot/uploads/*
+!wwwroot/uploads/.gitkeep

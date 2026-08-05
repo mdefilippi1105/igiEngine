@@ -11,12 +11,16 @@ public class UserController : Controller
     private readonly VideoRecorderContext _context;
     private readonly ILogger<UserController> _logger;
     private readonly PasswordHasher<User> _hasher;
+    private readonly IWebHostEnvironment _env;
 
-    public UserController(VideoRecorderContext context, ILogger<UserController> logger)
+    public UserController(VideoRecorderContext context, 
+        ILogger<UserController> logger,
+        IWebHostEnvironment env)
     {
         _logger = logger;
         _context = context;
         _hasher = new PasswordHasher<User>();
+        _env = env;
     }
     
     public IActionResult Index()
@@ -34,8 +38,9 @@ public class UserController : Controller
     //  POST unless it has forgery token from razor page <form>
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(User user)
+    public async Task<IActionResult> Create(User user, IFormFile? photo)
     {
+        user.PhotoPath = await SavePhotoAsync(photo);
         // never store the plain text. salt and hash it > then save into PasswordHash
         user.PasswordHash = _hasher.HashPassword(user, user.PasswordHash);
         
@@ -44,6 +49,57 @@ public class UserController : Controller
         
         return RedirectToAction(nameof(Index));
     }
+    
+    // this method will save the photo. only this controller calls it.
+    // the string is the web path.
+    private async Task<string?> SavePhotoAsync(IFormFile? photo)
+    {
+        if (photo == null || photo.Length == 0)
+            return null;
+        
+        var folder = Path.Combine(_env.WebRootPath, "uploads", "users");
+        Directory.CreateDirectory(folder);
+        
+        // create a guid and photofilename as fileName
+        var fileName = Guid.NewGuid() + Path.GetExtension(photo.FileName);
+        
+        //combine for full path
+        var fullPath = Path.Combine(folder, fileName);
+        
+        //create and dispose stream later
+        await using var stream = System.IO.File.Create(fullPath);
+        await photo.CopyToAsync(stream);
+        
+        return "/uploads/users/" + fileName;
+    }
+    
+    // delete the camera
+    public async Task<IActionResult> RemoveUser(Guid id)
+    {
+        try
+        {
+            var user = await _context.User.FindAsync(id);
+            if (user == null)
+            {
+                TempData["Error"] = "Nothing to delete!";
+                return NotFound();
+            }
+            _context.Remove(user);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "User removed from database.";
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            TempData["Error"] = "Could not remove User.";
+        }
+        return RedirectToAction(nameof(Index));
+    }
+    
+    
+    
+    
+    
     // edit users
     public async Task<IActionResult> Edit(Guid id)
     {

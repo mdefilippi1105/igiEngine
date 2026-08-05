@@ -36,4 +36,6 @@ public class User
     [StringLength(50)] 
     public string? Department { get; set; } = string.Empty;
     
+    public string? PhotoPath { get; set; }
+    
 }

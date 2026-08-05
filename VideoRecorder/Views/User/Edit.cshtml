@@ -2,78 +2,117 @@
 @using VideoRecorder.Models
 @model VideoRecorder.Models.User
 
-<div class="container mt-4" style="max-width: 600px;">
+<div class="container mt-4" style="max-width: 900px;">
     <h2 class="text-white">Edit User</h2>
-
-    @* asp-action= "Sa" tells the form to POST to /User/Create *@
-    <form asp-action="SaveEditUser" autocomplete="off">
-
-    @* Username field *@
-    <div class="mb-3 text-white">
-        <label asp-for="Username" class="form-label">Username</label>
-        <input asp-for="Username" class="form-control" style="width: 220px;"/>
-    </div>
     
-    @* Password field *@
-    <div class="mb-3 text-white">
-        <label asp-for="PasswordHash" class="form-label">Password</label>
-        <input asp-for="PasswordHash" class="form-control" style="width: 150px;" type="password" />
-    </div>
     
-    @* drop down menu for User.Roles *@
-    <div class="mb-3">
-        <label asp-for="Role" class="form-label "></label>
-        <select asp-for="Role" asp-items="Html.GetEnumSelectList<UserRoles>()"
-                class="form-select" style="width: 140px;">
+
+    @* asp-action= "Create" tells the form to POST to /User/Create *@
+    <form asp-action="SaveEditUser" enctype="multipart/form-data" autocomplete="off">
+        <div class="row">
             
-        </select> 
+            <div class="col-md-7">
+                @* Username field *@
+                <div class="mb-3 text-white">
+                    <label asp-for="Username" class="form-label">Username</label>
+                    <input asp-for="Username" class="form-control" style="width: 220px;"/>
+                </div>
+
+                @* Password field *@
+                <div class="mb-3 text-white">
+                    <label asp-for="PasswordHash" class="form-label">Password</label>
+                    <input asp-for="PasswordHash" class="form-control" style="width: 150px;" type="password"/>
+                </div>
+
+                @* drop down menu for User.Roles *@
+                <div class="mb-3">
+                    <label asp-for="Role" class="form-label "></label>
+                    <select asp-for="Role" asp-items="Html.GetEnumSelectList<UserRoles>()"
+                            class="form-select" style="width: 140px;">
+
+                    </select>
+
+                </div>
+                @* Enabled checkbox *@
+                <div class="mb-3 d-flex align-items-center gap-2">
+                    <input asp-for="IsEnabled" class="form-check-input" style="width: 1rem; height: 1rem;"/>
+                    <label asp-for="IsEnabled" class="form-check-label">Is Enabled?</label>
+                </div>
+
+
+                @*FirstName Field*@
+                <div class="mb-3 text-white">
+                    <label asp-for="FirstName" class="form-label">First Name</label>
+                    <input asp-for="FirstName" class="form-control" style="width: 220px;"/>
+                </div>
+
+                @* LastName field *@
+                <div class="mb-3 text-white">
+                    <label asp-for="LastName" class="form-label">Last Name</label>
+                    <input asp-for="LastName" class="form-control" style="width: 220px;"/>
+                </div>
+
+
+                @* Phonenumber field *@
+                <div class="mb-3 ">
+                    <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+                    <input asp-for="PhoneNumber" class="form-control" style="width: 220px;"/>
+                </div>
+
+                @*Email Field*@
+                <div class="mb-3 ">
+                    <label asp-for="Email" class="form-label">Email Address</label>
+                    <input asp-for="Email" class="form-control" style="width: 220px;"/>
+                </div>
+
+                @* Department field *@
+                <div class="mb-3 ">
+                    <label asp-for="Department" class="form-label">Department</label>
+                    <input asp-for="Department" class="form-control" style="width: 220px;"/>
+                </div>
+            </div>
         
-    </div>
-    @* Enabled checkbox *@
-    <div class="mb-3 d-flex align-items-center gap-2">
-        <input asp-for="IsEnabled" class="form-check-input" style="width: 1rem; height: 1rem;" />
-        <label asp-for="IsEnabled" class="form-check-label">Is Enabled?</label>
-    </div>
+            @* RIGHT: thumbnail + upload *@
+            <div class="col-md-5 text-white">
+                <label class="form-label">Photo</label>
 
+                @* Placeholder box. img starts hidden, JS swaps it in. *@
+                <div class="border rounded d-flex align-items-center justify-content-center mb-2"
+                     style="width: 180px; height: 180px; background-color: #2a2a3a;">
+                    <img id="photoPreview" src="" alt=""
+                         style="width: 100%; height: 100%; object-fit: cover; display: none;" />
+                    <span id="photoPlaceholder" class="text-secondary small">No image</span>
+                </div>
 
-    @*FirstName Field*@
-    <div class="mb-3 text-white">
-        <label asp-for="FirstName" class="form-label">First Name</label>
-        <input asp-for="FirstName" class="form-control" style="width: 220px;"/>
-    </div>
-
-    @* LastName field *@
-    <div class="mb-3 text-white">
-        <label asp-for="LastName" class="form-label">Last Name</label>
-        <input asp-for="LastName" class="form-control" style="width: 220px;" />
-    </div>
-
-
-       @* Phonenumber field *@
-        <div class="mb-3 ">
-            <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
-            <input asp-for="PhoneNumber" class="form-control" style="width: 220px;"/>
-        </div>
-
-        @*Email Field*@
-        <div class="mb-3 ">
-            <label asp-for="Email" class="form-label">Email Address</label>
-            <input asp-for="Email" class="form-control" style="width: 220px;" />
-        </div>
-
-        @* Department field *@
-        <div class="mb-3 ">
-            <label asp-for="Department" class="form-label">Department</label>
-            <input asp-for="Department" class="form-control" style="width: 220px;" />
+                @* name="photo" must match the controller parameter name *@
+                <input type="file" id="photoInput" name="photo"
+           
+                       accept="image/*" class="form-control" style="width: 180px;" />
+            </div>
         </div>
         
-
-
-
 
         @* Buttons *@
         <button type="submit" class="btn btn-lg btn-ffx">Save</button>
+        
+        <button type="submit" form="deleteForm" class="btn btn-lg btn-ffx"
+                onclick="return confirm('Delete this user?')">Delete</button>
 
+    </form>  @* main edit form ends here *@
 
-    </form>
+    @* separate form, sibling not child *@
+    <form id="deleteForm" asp-action="RemoveUser" asp-route-id="@Model.Id" method="post"></form>
+    
 </div>
+
+@* java script to get and render the image    *@
+<script>
+    photoInput.onchange = e => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        photoPreview.src = URL.createObjectURL(file);
+        photoPreview.hidden = false;
+        photoPlaceholder.hidden = false;
+    };
+</script>

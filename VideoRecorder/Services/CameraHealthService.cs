@@ -13,7 +13,7 @@ namespace VideoRecorder.Services;
  * When a request comes in, ASP.NET creates a "scope" -
  * a little box for the request. Background service
  * has no request so no box.
- * We also use recorderCount =
+ * We also use recorderCount = count 360 times x 10 = once per hour
  * 
  ****************************************************/
 public class CameraHealthService : BackgroundService
@@ -64,7 +64,6 @@ public class CameraHealthService : BackgroundService
             Console.WriteLine(e);
         }
     }
-
     
     public static async Task<bool> SendAsyncHealthCheck(Camera camera)
     {
@@ -108,7 +107,7 @@ public class CameraHealthService : BackgroundService
             
             var cameras = await context.Camera.ToListAsync(stopToken);
             
-            foreach (var cam in await context.Camera.ToListAsync(stopToken))
+            foreach (var cam in cameras)
             {
                 cam.IsOnline = await SendAsyncHealthCheck(cam);
                 _recording.RecordingAuthorize(cam);
