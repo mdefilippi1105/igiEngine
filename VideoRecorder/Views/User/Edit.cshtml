@@ -77,17 +77,24 @@
                 <label class="form-label">Photo</label>
 
                 @* Placeholder box. img starts hidden, JS swaps it in. *@
-                <div class="border rounded d-flex align-items-center justify-content-center mb-2"
+                <div class="border rounded d-flex align-items-center justify-content-center mb-2 ms-5"
                      style="width: 180px; height: 180px; background-color: #2a2a3a;">
-                    <img id="photoPreview" src="" alt=""
-                         style="width: 100%; height: 100%; object-fit: cover; display: none;" />
-                    <span id="photoPlaceholder" class="text-secondary small">No image</span>
+                    
+                    @* points to the saved file *@
+                    @* if the file is empty, show no image*@
+                    
+                    <img id="photoPreview" src="@Model.PhotoPath" alt=""
+                         style="width: 100%; height: 100%; object-fit: cover;"
+                         hidden="@(string.IsNullOrEmpty(Model.PhotoPath))"/>
+                    
+                    
+                    <span id="photoPlaceholder" class="text-secondary small"
+                          hidden="@(!string.IsNullOrEmpty(Model.PhotoPath))">No image</span>
                 </div>
 
                 @* name="photo" must match the controller parameter name *@
                 <input type="file" id="photoInput" name="photo"
-           
-                       accept="image/*" class="form-control" style="width: 180px;" />
+                       accept="image/*" class="form-control" style="width: 270px;" />
             </div>
         </div>
         
@@ -97,7 +104,10 @@
         
         <button type="submit" form="deleteForm" class="btn btn-lg btn-ffx"
                 onclick="return confirm('Delete this user?')">Delete</button>
-
+        
+        @* hidden form so the ID of the user carrys over, otherwise it thinks the user id is null*@
+        <input type="hidden" asp-for="Id" />
+        
     </form>  @* main edit form ends here *@
 
     @* separate form, sibling not child *@
@@ -109,10 +119,11 @@
 <script>
     photoInput.onchange = e => {
         const file = e.target.files[0];
-        if (!file) return;
+        if (!file) 
+            return;
 
         photoPreview.src = URL.createObjectURL(file);
         photoPreview.hidden = false;
-        photoPlaceholder.hidden = false;
+        photoPlaceholder.hidden = true;
     };
 </script>

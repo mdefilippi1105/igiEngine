@@ -73,7 +73,7 @@ public class UserController : Controller
         return "/uploads/users/" + fileName;
     }
     
-    // delete the camera
+    // delete the user
     public async Task<IActionResult> RemoveUser(Guid id)
     {
         try
@@ -116,7 +116,7 @@ public class UserController : Controller
     //this method runs async (await the db) User model binding
     // asp.net reads the posted form fields and auto builds
     // a user object from them.
-    public async Task<IActionResult> SaveEditUser(User user)
+    public async Task<IActionResult> SaveEditUser(User user, IFormFile? photo)
     {
         // if invalid; return and show the user the error of their ways
         if (!ModelState.IsValid) 
@@ -142,6 +142,15 @@ public class UserController : Controller
         existingUser.Department = user.Department;
         existingUser.IsEnabled = user.IsEnabled;
         
+        //write the file to disk and hands back its webpath
+        var newPath = await SavePhotoAsync(photo);
+        
+        // only overwrite when a real file comes in
+        // point DB at new file, skip if new path is null so keep the old photo
+        if (newPath != null)
+            existingUser.PhotoPath = newPath;
+        
+        
         // this is the password guard. if the field is not empty,
         // it will generate the new password hash. if the field is
         // empty, then keep the existing hash.
@@ -152,6 +161,7 @@ public class UserController : Controller
         
         //save the changes
         await _context.SaveChangesAsync();
+        
         TempData["Success"] = "User updated successfully!";
         return RedirectToAction(nameof(Index));
     }
