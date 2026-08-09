@@ -41,13 +41,14 @@ public class RecordingService
                                             $"-segment_format_options movflags=+frag_keyframe+empty_moov " +
                                             $"\"{recordingDirectory}/%Y%m%d_%H%M%S.mp4\"";
         
-        //c# commands are now the keyboard instead of terminal keyboard
+        // c# commands are now the keyboard instead of terminal keyboard
         recordProcess.StartInfo.RedirectStandardInput = true;
         
-        //direct method, no shell needed
+        
+        // direct method, no shell needed
         recordProcess.StartInfo.UseShellExecute = false;
         
-        //suppresses a blank cmd window from popping up - for Windows OS only
+        // suppresses a blank cmd window from popping up - for Windows OS only
         recordProcess.StartInfo.CreateNoWindow = true;
         
         // start the recordings
@@ -93,18 +94,31 @@ public class RecordingService
     // and the camera is enabled.
     public void RecordingAuthorize(Camera camera)
     {
+        // look up the camera id
+        // if no entry, never started, false
+        _recordings.TryGetValue(camera.Id, out var process);
+        
+        // if entry dead - ffmpeg quit, false
+        var processIsAlive = process is not null && !process.HasExited;
+        
+        // if entry alive - ffmpeg running, true
+        camera.IsRecording = processIsAlive;
+        
+        
         var recordingAllowed = camera.UserToggledRecording && camera.IsOnline && camera.IsEnabled;
-
+        
+        //cam online, enabled and toggle button clicked, but NOT currently recording
         if (recordingAllowed && !camera.IsRecording)
         {
             var url = $"rtsp://{camera!.Username}:{camera.Password}@{camera.Host}{camera.Path}";
             Start(camera.Id, url);
             
-            camera.IsRecording = true;
         }
+        
+        // if any 3 of the "allowed" parameters are not satisfied
         else if (!recordingAllowed && camera.IsRecording)
         {
-            Stop(camera.Id);
+            Stop(camera.Id); // "shut it down" -jon taffer
             camera.IsRecording = false;
         }
     }

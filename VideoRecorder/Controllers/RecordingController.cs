@@ -72,7 +72,9 @@ public class RecordingController : Controller
         
         _logger.LogInformation("Recording toggled for {CameraName}", camera.Name);
         
+        
         _recording.RecordingAuthorize(camera);
+        
         await _context.SaveChangesAsync();
 
         return RedirectToAction("Index", "Camera");

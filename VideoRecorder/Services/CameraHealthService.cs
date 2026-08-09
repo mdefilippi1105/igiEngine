@@ -107,15 +107,26 @@ public class CameraHealthService : BackgroundService
             
             var cameras = await context.Camera.ToListAsync(stopToken);
             
+            // pass counter. the loop runs every 10 seconds,
+            // so this tracks how many loops have passed
+            _recorderCount++;
+            
+            // check each cam to auth recording
+            foreach (var cam in cameras)
+            {
+                _recording.RecordingAuthorize(cam);
+                _logger.LogInformation("{Name}: rec={R} toggled={T}", cam.Name, cam.IsRecording, cam.UserToggledRecording);
+            }
+            
+            // check each cam to see if online
             foreach (var cam in cameras)
             {
                 cam.IsOnline = await SendAsyncHealthCheck(cam);
-                _recording.RecordingAuthorize(cam);
             }
             
             // 360 counts x 10 seconds = once per hour
             // then we run DeleteRecordings()
-            if (_recorderCount++ % 360 == 0)
+            if (_recorderCount % 360 == 0)
             {
                 foreach (var cam in cameras)
                 {
