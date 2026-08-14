@@ -1,14 +1,18 @@
+@model VideoRecorder.Models.Server
 @{
-    ViewData["Title"] = "igiEngine Home";
+    ViewData["Title"] = "igiEngine Server";
+
+    var online = Model != null && Model.IsEnabled;
+    var lastSeen = Model?.LastSeenUtc;
+    var stale = lastSeen == null || (DateTime.UtcNow - lastSeen.Value).TotalMinutes > 5;
 }
-@model List<VideoRecorder.Models.User>
+
 
 
 <div style="display:flex; ">
-    
-     @*********************************************** 
+
+    @*********************************************** 
     this is the entire tool bar starting at the div
-    
     ***********************************************@
     <div style="width:200px; 
         min-width:200px; 
@@ -27,82 +31,57 @@
             border-bottom:1px solid #1e2550;
             margin:0;">Home
         </p>
-        
-        <!-- Brings you to Camera/Index   -->
-        <a
-            asp-controller="Camera"
-            asp-action="Index"
-            class="btn btn-sm btn-ffx"
-            style="background:#1e2550; 
-                   border:1px solid #330860; 
-                   color:#fafafa;
-                   display:flex; 
-                   align-items:center; 
-                   gap:15px;">
-            <img src="~/Images/cam.png" alt="" width="45" height="45">
-            Cams
+
+        <!-- Add a new recording server   -->
+        <a asp-controller="Server"
+           asp-action="AddServer"
+           class="btn btn-sm btn-ffx srv-btn"
+           style="margin-right:auto;">
+            <img src="~/Images/addserver.png" alt="" width="45" height="45">
+            Add Server
         </a>
 
-        <!--Brings you to User/Index -->
-        <a asp-controller="User" 
+        <!-- Edit your current recording server -->
+        <a asp-controller="Server"
+           asp-action="EditServer"
+           class="btn btn-sm btn-ffx srv-btn"
+           style="margin-right:auto;">
+            <img src="~/Images/editserver.png" alt="" width="45" height="45">
+            Edit Server
+        </a>
+
+        <!--Delete the server -->
+        <a asp-controller="Server"
+           asp-action="DeleteServer"
+           class="btn btn-sm btn-ffx srv-btn"
+           style="margin-right:auto;">
+            <img src="~/Images/deleteserver.png" alt="" width="45" height="45">
+            Remove Server
+        </a>
+
+
+        <!-- Server statistics -->
+        <a asp-controller="Server"
+           asp-action="ServerStatistics"
+           class="btn btn-sm btn-ffx srv-btn"
+           style="margin-right:auto;">
+            <img src="~/Images/serverstats.png" alt="" width="65" height="45">
+            Statistics
+        </a>
+
+        <!-- Go to home page   -->
+        <a asp-controller="Home" 
            asp-action="Index" 
-           class="btn btn-ffx"
+           class="btn btn-ffx" 
            style="background:#1e2550; 
                   border:1px solid #330860; 
                   color:#fafafa;
-                  display:inline-flex; 
+                  display:flex; 
                   align-items:center; 
-                  gap:15px;">
-            <img src="~/Images/users.png" alt="" width="45" height="45">
-            Users
+                  gap:8px;">
+            <img src="~/Images/home.png" alt="" width="45" height="45">
+            igiEngine Home
         </a>
-
-        <!--Brings you to Server/Index -->
-        <button type="button"
-                class="btn btn-sm btn-ffx"
-                style="background:#1e2550; 
-                  border:1px solid #330860; 
-                  color:#fafafa;
-                  display:inline-flex; 
-                  align-items:center; 
-                  gap:15px;"
-                data-bs-toggle="modal"
-                data-bs-target="#editUserModal">
-            <img src="~/Images/server_alt.png" alt="" width="45" height="45">
-            Server
-        </button>
-        
-        <!-- recording servers -->
-        <a
-            class="btn btn-sm btn-ffx"
-            style="background:#1e2550; 
-                   border:1px solid #330860; 
-                   color:#fafafa;
-                   display:flex; 
-                   align-items:center; 
-                   gap:15px;"
-            data-bs-toggle="modal"
-            data-bs-target="#discoverModal">
-            <img src="~/Images/playback.png" alt="" width="45" height="45">
-            Play
-        </a>
-        
-
-        <!-- Brings you to Settings/Index   -->
-        <a
-            class="btn btn-sm btn-ffx"
-            style="background:#1e2550; 
-                   border:1px solid #330860; 
-                   color:#fafafa;
-                   display:flex; 
-                   align-items:center; 
-                   gap:15px;"
-            data-bs-toggle="modal"
-            data-bs-target="#discoverModalOnvif">
-            <img src="~/Images/wrench.png" alt="" width="45" height="45">
-            Tools
-        </a>
-        
 
         <!-- Log Out   -->
         <a asp-controller="Account" 
@@ -118,52 +97,80 @@
             Exit
         </a>
     </div>
-    
-    
-   
- <!-- main tyle grid layout -->
+    @* end tool bar *@
 
 
-<div class="launcher">
+    @* ---------- server status panel ---------- *@
+    <div class="status-wrap">
 
-  <h2 class="section-title">Quick Actions</h2>
-  <div class="tile-grid">
-    <!-- swap the emoji for your own <img src="..."> or inline SVG -->
-    <a class="tile" asp-controller="Camera" asp-action="AddCamera">
-        <span class="tile-icon">
-            <img src="~/Images/addcamera.png" alt="" width="45" height="45">
-        </span>
-        Add Camera
-    </a>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    <button class="tile"><span class="tile-icon">🗺️</span>Maps</button>
-    <button class="tile"><span class="tile-icon">🔔</span>Alarm monitoring</button>
-    <button class="tile"><span class="tile-icon">📊</span>Dashboards</button>
-    <button class="tile"><span class="tile-icon">❤️</span>Health dashboard</button>
-  </div>
+        @if (Model == null)
+        {
+            <div class="status-head">
+                <span class="status-eyebrow">Recording servers</span>
+                
+                
+            </div>
+            <div class="empty">
+                Add a server record to see its status here.
+            </div>
+        }
+        else
+        {
+            <div class="status-head">
+                <span class="status-eyebrow">Recording server</span>
+                <h1>@Model.Name</h1>
+                
+                
+                <span class="pill">
+                    <span class="server-dot @(online ? (stale ? "warn" : "live") : "")"></span>
+                    @(online ? (stale ? "No recent contact" : "Online") : "Disabled")
+                </span>
+            </div>
 
-  <h2 class="section-title">Investigation</h2>
-  <div class="tile-grid">
-    <button class="tile"><span class="tile-icon">📁</span>Archives</button>
-    <button class="tile"><span class="tile-icon">🔖</span>Bookmarks</button>
-    <button class="tile"><span class="tile-icon">🏃</span>Motion search</button>
-    <button class="tile"><span class="tile-icon">📹</span>Camera events</button>
-    <button class="tile"><span class="tile-icon">🎞️</span>Video file explorer</button>
-  </div>
+            <div class="field-grid">
 
-</div>     
+                <div class="field">
+                    <div class="field-label">Hostname</div>
+                    <div class="field-value mono">@Model.Hostname</div>
+                </div>
 
+                <div class="field">
+                    <div class="field-label">Port</div>
+                    <div class="field-value mono">@Model.Port</div>
+                </div>
 
-</div>@* end tool bar   *@
+                <div class="field">
+                    <div class="field-label">Enabled</div>
+                    <div class="field-value">@(Model.IsEnabled ? "Yes" : "No")</div>
+                    <div class="field-sub">Operator setting, not live state</div>
+                </div>
 
+                <div class="field">
+                    <div class="field-label">Last seen</div>
+                    @if (lastSeen == null)
+                    {
+                        <div class="field-value">Never</div>
+                        <div class="field-sub">Server has not checked in</div>
+                    }
+                    else
+                    {
+                        <div class="field-value mono">@lastSeen.Value.ToString("yyyy-MM-dd HH:mm:ss") UTC</div>
+                        <div class="field-sub">@((int)(DateTime.UtcNow - lastSeen.Value).TotalMinutes) min ago</div>
+                    }
+                </div>
 
+                <div class="field">
+                    <div class="field-label">Cameras</div>
+                    <div class="field-value">@Model.Cameras.Count</div>
+                </div>
 
+                <div class="field">
+                    <div class="field-label">Server ID</div>
+                    <div class="field-value mono">@Model.Id</div>
+                </div>
 
+            </div>
+        }
+    </div>
+
+</div>

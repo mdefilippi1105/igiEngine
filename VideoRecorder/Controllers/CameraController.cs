@@ -277,7 +277,7 @@ public class CameraController : Controller
         string path = ManufacturerTable.DefaultRtspPaths.GetValueOrDefault(
             camera.Manufacturer!.ToLower(), "/live.sdp");
         
-
+        //////////////////////////////////
         // all clear - connect to camera
         //////////////////////////////////
         var url = $"rtsp://{camera.Username}:{camera.Password}@{camera.Host}{path}";

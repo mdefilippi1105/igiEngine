@@ -16,7 +16,7 @@ public class HomeController : Controller
     {
         _logger = logger;
         _context = context;
-        _hasher = new PasswordHasher<User>();
+        
     }
 
     public IActionResult Index()

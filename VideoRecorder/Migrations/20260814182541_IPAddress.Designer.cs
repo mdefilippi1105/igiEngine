@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VideoRecorder.Database;
 
@@ -11,9 +12,11 @@ using VideoRecorder.Database;
 namespace VideoRecorder.Migrations
 {
     [DbContext(typeof(VideoRecorderContext))]
-    partial class VideoRecorderContextModelSnapshot : ModelSnapshot
+    [Migration("20260814182541_IPAddress")]
+    partial class IPAddress
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

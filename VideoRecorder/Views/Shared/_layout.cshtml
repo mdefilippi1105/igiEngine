@@ -2,7 +2,7 @@
 @*****************************************************************************************
 This is the master template for our app. Its the wrapper that holds all the shared HTML
 that appears on every page: <html>, <head>, navbar, footer
-IMPORTANT: ICONS ARE 9090b8
+IMPORTANT: ICONS ARE 9090b8 / 60px
 *****************************************************************************************@
 
 <!DOCTYPE html>
@@ -274,6 +274,129 @@ IMPORTANT: ICONS ARE 9090b8
         @@keyframes pulse-red-recording {
             0%   { box-shadow: 0 0 0 0 rgba(255, 43, 66, 0.5); }
             100% { box-shadow: 0 0 0 6px rgba(255, 43, 66, 0); }
+        }
+        .status-wrap {
+            flex: 1;
+            padding: 24px 28px;
+            color: #fafafa;
+        }
+
+        .status-head {
+            display: flex;
+            align-items: baseline;
+            gap: 14px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #1e2550;
+            margin-bottom: 22px;
+        }
+
+        .status-head h1 {
+            font-size: 28px;
+            margin: 0;
+            letter-spacing: .01em;
+        }
+
+        .status-eyebrow {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .14em;
+            color: #6e7a9a;
+        }
+
+        .pill {
+            margin-left: auto;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            padding: 5px 12px;
+            border-radius: 999px;
+            border: 1px solid #330860;
+            background: #1e2550;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .server-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #6e7a9a;
+        }
+
+        .server-dot.live {
+            background: #47d16c;
+            box-shadow: 0 0 0 0 rgba(71, 209, 108, .55);
+            animation: pulse 2s infinite;
+        }
+
+        .server-dot.warn { background: #e0b13a; }
+
+        .srv-btn {
+            background: #1e2550;
+            border: 1px solid #330860;
+            color: #fafafa;
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        @@keyframes pulse {
+            70%  { box-shadow: 0 0 0 7px rgba(71, 209, 108, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(71, 209, 108, 0); }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+        .server-dot.live { animation: none; }
+        }
+
+        .field-grid {
+            animation: fade-up 0.4s ease;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        .field {
+            animation: fade-up 0.4s ease;
+            background: #0d1117;
+            border: 1px solid #1e2550;
+            border-left: 3px solid #330860;
+            border-radius: 6px;
+            padding: 14px 16px;
+        }
+
+        .field-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .12em;
+            color: #6e7a9a;
+            margin-bottom: 6px;
+        }
+
+        .field-value {
+            font-size: 20px;
+            word-break: break-all;
+        }
+
+        .field-value.mono {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 15px;
+        }
+
+        .field-sub {
+            font-size: 12px;
+            color: #6e7a9a;
+            margin-top: 4px;
+        }
+
+        .empty {
+            background: #0d1117;
+            border: 1px dashed #330860;
+            border-radius: 6px;
+            padding: 40px;
+            text-align: center;
+            color: #6e7a9a;
         }
     </style>
     

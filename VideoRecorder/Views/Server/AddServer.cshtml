@@ -1,0 +1,176 @@
+@* Tell this view it will receive a Server object *@
+@using System.Net.NetworkInformation
+@using System.Runtime.InteropServices
+@using VideoRecorder.Models
+@model VideoRecorder.Models.Server
+
+<div class="container mt-4" style="max-width: 600px;">
+    <h2 class="text-white">Add Recording Server</h2>
+
+
+    @* asp-action= we are going to perform the AddServer task when we click submit *@
+    <form asp-action="AddServer" autocomplete="off">
+
+        @* Name field *@
+        <div class="mb-3 text-white">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" style="width: 220px;"/>
+        </div>
+        
+        @* Hostname field *@
+        <div class="mb-3 text-white">
+            <label asp-for="Hostname" class="form-label"></label>
+            <input asp-for="Hostname" class="form-control" style="width: 220px;"/>
+        </div>
+        
+        @* IpAddress field *@
+        <div class="mb-3 text-white">
+            <label asp-for="IpAddress" class="form-label">IP Address</label>
+            <input asp-for="IpAddress" class="form-control" style="width: 220px;"/>
+        </div>
+        
+
+        @* Port Field *@
+        <div class="mb-3">
+            <label asp-for="Port" class="form-label"></label>
+            <input asp-for="Port" class="form-control" style="width: 150px;" type="number" placeholder="8554"/>
+        </div>
+        
+        <div class="mb-3">
+            <label asp-for="Os" class="form-label"></label>
+            <select asp-for="Os" class="form-select" style="width: 200px;">
+                <option value="0">Windows</option>
+                <option value="1">macOS</option>
+                <option value="2">Linux</option>
+            </select>
+        </div>
+        
+        @*  drop down menu for the drive path 
+            what is happening here is based on the drop down selection
+            of the server OS above, it should trigger the drop down results
+            based on the OS selection above
+        *@
+        <div class="mb-3">
+            <label asp-for="DrivePath" class="form-label "></label>
+            <select asp-for="DrivePath" class="form-select" style="width: 140px;">
+            
+                <option value=""></option>
+                <option value="C:\igiengine\recordings" data-os="0">C:</option>
+                <option value="D:\igiengine\recordings" data-os="0">D:</option>
+                <option value="E:\igiengine\recordings" data-os="0">E:</option>
+                <option value="F:\igiengine\recordings" data-os="0">F:</option>
+            
+            
+                <option value="/Users/Shared/Recordings" data-os="1"> OSX: /Users/Shared/Recordings</option>
+                <option value="/Library/Application Support/igiEngine/Recordings" data-os="1">/Library/Application Support</option>
+                <option value="/opt/igiengine/recordings" data-os="1">/opt/igiengine/recordings</option>
+            
+            
+                <option value="/var/lib/igiengine/recordings" data-os="2">/var/lib/igiengine/recordings</option>
+                <option value="/mnt/recordings" data-os="2">/mnt/recordings</option>
+                <option value="/srv/recordings" data-os="2">/srv/recordings</option>
+                <option value="/opt/igiengine/recordings" data-os="2">/opt/igiengine/recordings</option>
+            
+            </select>
+        </div>
+        
+
+        @* Enabled checkbox *@
+        <div class="mb-3 d-flex align-items-center gap-2">
+            <input asp-for="IsEnabled" class="form-check-input" style="width: 1rem; height: 1rem;" />
+            <label asp-for="IsEnabled" class="form-check-label"></label>
+        </div>
+
+
+        @* Buttons *@
+        <button
+            type="submit"
+            class="btn btn-lg btn-ffx text-white">Save
+        </button>
+
+        <a
+            asp-action="Index"
+            class="btn btn-lg btn-ffx text-white">Cancel
+        </a>
+
+        <a
+            onclick="showPing()"
+            class="btn btn-lg btn-ffx text-white">Ping
+        </a>
+
+        <a
+            class="btn btn-lg btn-ffx text-white"
+            data-bs-toggle="modal"
+            data-bs-target="#arpModal">
+            ARP
+        </a>
+
+    </form>
+</div>
+
+
+<script>
+    // this JavaScript will render the dropdown options 
+    // based on what you select for the OS drop down
+    
+    const osSelector = document.querySelector('[name="Os"]'); // grab os by name attribute
+    const pathSelector = document.querySelector('[name="DrivePath"]'); // same for the path
+    
+    function filterPaths() {        // this is called in 2 spots- the event listener and the initial run
+        for (const option of pathSelector.options) {    // live collection of every <option> inside the select
+            if (!option.dataset.os) continue;           // dataset.os reads the data-os attribute
+            option.hidden = option.dataset.os !== osSelector.value  //selected enum, so any option whose data-os doesn't match gets hidden
+        }
+        pathSelector.selectedIndex = 0; // resets the path select to the placeholder because the previousy selected path may be hidden
+    }
+    osSelector.addEventListener('change', filterPaths); // run filterPaths everytime a user picks a different OS
+    filterPaths(); // run once on load
+    
+    
+</script>
+
+
+
+
+        <script>
+            function showPing() {
+                Swal.fire({
+                    title: 'Ping',
+                    input: 'text',
+                    inputPlaceholder: '192.168.1.1',
+                    background: '#1a1a2e',
+                    color: '#ffffff',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ping'
+                }).then((result) => {
+                    // result is the data from the input field
+                    // if user hits confirm button:
+                    if (result.isConfirmed) {
+                        console.log(result.value);
+                        //return the ip to the URL. ?ip= is the value
+                        window.location.href = '/Camera/PingAddress?ip=' + result.value;
+                    }
+                })
+            }
+
+        document.getElementById('arpModal').addEventListener('shown.bs.modal',
+
+        async function showArp () {
+
+            const response = await fetch('/Camera/Arp/');
+            const devices = await response.json();
+            let html = '';
+
+            if (devices.length === 0) {
+                html = '<p> No devices found.</p>';
+            }
+
+            for (let i = 0; i < devices.length; i++)
+            {
+                html += '<p>' + devices[i] + '</p>';
+            }
+            document.getElementById('arpResults').innerHTML = html;
+        });
+    </script>
+
+

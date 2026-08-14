@@ -83,6 +83,13 @@ public class Camera
 
     // we are keeping the default retention at 30, this can be selected via camera edit page
     public int RetentionDays { get; set; } = 30;
+    
+    /*********************************************
+     * Recording server information
+     **********************************************/
+    
+    public Guid? ServerId { get; set; }
+    public Server? Server { get; set; }
 
 
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VideoRecorder.Database;
 
@@ -11,9 +12,11 @@ using VideoRecorder.Database;
 namespace VideoRecorder.Migrations
 {
     [DbContext(typeof(VideoRecorderContext))]
-    partial class VideoRecorderContextModelSnapshot : ModelSnapshot
+    [Migration("20260814132211_AddServer")]
+    partial class AddServer
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -137,15 +140,7 @@ namespace VideoRecorder.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("DrivePath")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Hostname")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("IpAddress")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -158,9 +153,6 @@ namespace VideoRecorder.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Os")
-                        .HasColumnType("int");
 
                     b.Property<int>("Port")
                         .HasColumnType("int");

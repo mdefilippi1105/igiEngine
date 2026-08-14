@@ -21,7 +21,9 @@ public class VideoRecorderContext : DbContext
     public DbSet<User> User { get; set; }
     
     public DbSet<CameraGroup> CameraGroup { get; set; }
-    
+
+    public DbSet<Server> Server { get; set; } = null!;
+
 
 }
 
