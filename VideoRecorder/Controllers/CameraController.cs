@@ -81,6 +81,8 @@ public class CameraController : Controller
      * The second method is same as Create() but accepts a cam.
      * When form is submitted .NET automatically fills the camera object with
      * whatever the user typed in.
+     * Create() is for adding RTSP links
+     * AddCamera() is full manual adding
      **************************************************************************/
     
     public IActionResult Create()
@@ -109,8 +111,9 @@ public class CameraController : Controller
     }
     
     [HttpGet]
-    public IActionResult AddCamera()
+    public async Task<IActionResult> AddCamera()
     {
+        await LoadServersAsync(); // have to refill the ViewBag - it doesnt survive the POST
         return View(); //show the cshtml
     }
 
@@ -124,6 +127,8 @@ public class CameraController : Controller
         {
             camera.Path = ManufacturerTable.DefaultRtspPaths[camera.Manufacturer!];
         }
+        
+        
         if (ModelState.IsValid) // check data validation
         {
             _context.Add(camera); // add cam to database context
@@ -139,6 +144,16 @@ public class CameraController : Controller
 
         return View(camera);
     }
+
+    private async Task LoadServersAsync() =>
+        ViewBag.Servers = new SelectList(
+            await _context.Server
+                .Where(s => s.IsEnabled)
+                .OrderBy(s => s.Name)
+                .ToListAsync(),
+            "Id",
+            "Name");
+    
     
     // delete the camera
     public async Task<IActionResult> RemoveCamera(Guid id)

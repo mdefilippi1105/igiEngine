@@ -85,6 +85,14 @@
                 <option value="90">90 days</option>
             </select>
         </div>
+        
+        <div class="mb-3">
+            <label asp-for="ServerId" class="form-label">Recording Server</label>
+            <select asp-for="ServerId" asp-items="ViewBag.Servers" class="form-select" style="width: 140px;">
+                <option value="">-- none --</option>
+            </select>
+            <span asp-validation-for="ServerId" class="text-danger"></span>
+        </div>
 
 
         @* Enabled checkbox *@
@@ -109,6 +117,7 @@
         </a>
 
         <a
+            onclick=""
             class="btn btn-lg btn-ffx "
             data-bs-toggle="modal"
             data-bs-target="#arpModal">
@@ -126,3 +135,44 @@
 
     </form>
 </div>
+
+<script>
+document.getElementById('arpModal').addEventListener('shown.bs.modal',
+        
+    async function showArp() {
+    const response = await fetch('/Camera/Arp/'); 
+    const devices = await response.json();
+    let html = '';
+                
+    if (devices.length === 0) {
+    html = '<p> No devices found.</p>';
+    }
+                
+    for (let i = 0; i < devices.length; i++) 
+    {
+    html += '<p>' + devices[i] + '</p>';
+    }
+    document.getElementById('arpResults').innerHTML = html;
+});
+
+
+function showPing() {
+    Swal.fire({
+        title: 'Ping',
+        input: 'text',
+        inputPlaceholder: '192.168.1.1',
+        background: '#1a1a2e',
+        color: '#ffffff',
+        showCancelButton: true,
+        confirmButtonText: 'Ping'
+    }).then((result) => {
+        // result is the data from the input field
+        // if user hits confirm button:
+        if (result.isConfirmed) {
+            console.log(result.value);
+            //return the ip to the URL. ?ip= is the value
+            window.location.href = '/Camera/PingAddress?ip=' + result.value;
+        }
+    })
+}
+</script>

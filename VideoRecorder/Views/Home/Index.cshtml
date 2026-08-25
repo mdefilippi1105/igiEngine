@@ -127,13 +127,27 @@
 
   <h2 class="section-title">Quick Actions</h2>
   <div class="tile-grid">
-    <!-- swap the emoji for your own <img src="..."> or inline SVG -->
-    <a class="tile" asp-controller="Camera" asp-action="AddCamera">
-        <span class="tile-icon">
-            <img src="~/Images/addcamera.png" alt="" width="45" height="45">
-        </span>
-        Add Camera
-    </a>
+    
+      <a class="tile" asp-controller="Camera" asp-action="AddCamera">
+          <span class="tile-icon">
+              <img src="~/Images/addcamera.png" alt="" width="45" height="45">
+          </span>
+          Add Camera
+      </a>
+      
+      <a class="tile" asp-controller="User" asp-action="Create">
+          <span class="tile-icon">
+              <img src="~/Images/newuser.png" alt="" width="45" height="45">
+          </span>
+          Add User
+      </a>
+      
+      <a class="tile" asp-controller="Server" asp-action="AddServer">
+          <span class="tile-icon">
+              <img src="~/Images/addserver.png" alt="" width="45" height="45">
+          </span>
+          Add Server
+      </a>
     
     
     
@@ -143,7 +157,7 @@
     
     
     
-    <button class="tile"><span class="tile-icon">🗺️</span>Maps</button>
+      <button class="tile"><span class="tile-icon">🗺️</span>Maps</button>
     <button class="tile"><span class="tile-icon">🔔</span>Alarm monitoring</button>
     <button class="tile"><span class="tile-icon">📊</span>Dashboards</button>
     <button class="tile"><span class="tile-icon">❤️</span>Health dashboard</button>
