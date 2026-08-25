@@ -42,7 +42,10 @@ public class CameraHealthService : BackgroundService
     // the adding camera / edit camera pages
     private void DeleteOldRecordings(Camera camera)
     {
-        var dir = $"/Users/michaeldefilippi/rec-test/{camera.Id}";
+        if (string.IsNullOrWhiteSpace(camera.Server?.DrivePath))
+            return;
+        
+        var dir = Path.Combine(camera.Server.DrivePath, camera.Id.ToString());
         if (!Directory.Exists(dir))
             return;
         
@@ -54,9 +57,7 @@ public class CameraHealthService : BackgroundService
             foreach (var file in Directory.GetFiles(dir, "*.mp4"))
             {
                 if (File.GetCreationTime(file) < cutoff)
-                {
                     File.Delete(file);
-                }
             }
         }
         catch (Exception e)
@@ -104,8 +105,10 @@ public class CameraHealthService : BackgroundService
             // make a new instance, don't remember everything the main Dbcontext loads
             // then make a fresh connection then return it on dispose()
             var context = scope.ServiceProvider.GetRequiredService<VideoRecorderContext>();
-            
-            var cameras = await context.Camera.ToListAsync(stopToken);
+
+            var cameras = await context.Camera
+                .Include(c => c.Server)
+                .ToListAsync(stopToken);
             
             // pass counter. the loop runs every 10 seconds,
             // so this tracks how many loops have passed

@@ -52,7 +52,7 @@ public class RecordingService
                                             $"-f segment -segment_time 300 " +
                                             $"-reset_timestamps 1 -strftime 1 " +
                                             $"-segment_format_options movflags=+frag_keyframe+empty_moov " +
-                                            $"\"{segmentPattern}/%Y%m%d_%H%M%S.mp4\"";
+                                            $"\"{segmentPattern}\"";
         
         // c# commands are now the keyboard instead of terminal keyboard
         recordProcess.StartInfo.RedirectStandardInput = true;
@@ -166,6 +166,13 @@ public class RecordingService
         
         
         var recordingAllowed = camera.UserToggledRecording && camera.IsOnline && camera.IsEnabled;
+        
+        // if no server found - set IsRecording to false
+        if (camera.Server is null || string.IsNullOrWhiteSpace(camera.Server.DrivePath))
+        {
+            camera.IsRecording = false;
+            return;
+        }
         
         //cam online, enabled and toggle button clicked, but NOT currently recording
         if (recordingAllowed && !camera.IsRecording)
