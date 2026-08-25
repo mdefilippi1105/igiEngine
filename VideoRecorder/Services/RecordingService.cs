@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using VideoRecorder.Database;
 using VideoRecorder.Models;
 
 namespace VideoRecorder.Services;
@@ -10,8 +11,14 @@ public class RecordingService
     // concurrent with multiple requests hitting it 
     private readonly ConcurrentDictionary<Guid, Process> _recordings = new();
     
+    private readonly string _ffmpegPath =
+        "/Users/michaeldefilippi/RiderProjects/VideoRecorder/VideoRecorder/ThirdParty/ffmpeg";
     
+
     /*************************************************
+     * First, grab the camera from the db
+     * Based on the server OS, it will write to the selected drive path
+     *
      * ffmpeg args explained:
      * 1. TCP instead of UDP, copy codec its already using (H264)
      * 2. segment output - series of files vs 1 big file
@@ -21,42 +28,95 @@ public class RecordingService
      * so files stay playable even if the service dies mid-segment.
      * 5. {dir}/date and time format
      ***************************************************/
-    public void Start(Guid cameraId, string cameraUrl)
+    
+    public void Start(Camera camera, string cameraUrl)
     {
-        // guard - if cam in dictionary, return
-        if (_recordings.ContainsKey(cameraId))
-            return;
+        
+        if (String.IsNullOrWhiteSpace(camera.Server?.DrivePath))
+            throw new InvalidOperationException($"Camera {camera.Id} has no server drive path.");
+        
+        
+        
+      
         
         // $@ keeps the slashes verbatim and string interpolation
-        var recordingDirectory = $@"/Users/michaeldefilippi/rec-test/{cameraId}";
+        var recordingDirectory = Path.Combine(camera.Server.DrivePath, camera.Id.ToString());
         Directory.CreateDirectory(recordingDirectory);
-        
+
+        var segmentPattern = Path.Combine(recordingDirectory, "%Y%m%d_%H%M%S.mp4");
 
         var recordProcess = new Process();
-        recordProcess.StartInfo.FileName = "/Users/michaeldefilippi/RiderProjects/VideoRecorder/VideoRecorder/ThirdParty/ffmpeg";
+        recordProcess.StartInfo.FileName = _ffmpegPath;
         recordProcess.StartInfo.Arguments = $"-rtsp_transport tcp -i \"{cameraUrl}\" " +
                                             $"-c copy " +
                                             $"-f segment -segment_time 300 " +
                                             $"-reset_timestamps 1 -strftime 1 " +
                                             $"-segment_format_options movflags=+frag_keyframe+empty_moov " +
-                                            $"\"{recordingDirectory}/%Y%m%d_%H%M%S.mp4\"";
+                                            $"\"{segmentPattern}/%Y%m%d_%H%M%S.mp4\"";
         
         // c# commands are now the keyboard instead of terminal keyboard
         recordProcess.StartInfo.RedirectStandardInput = true;
-        
-        
         // direct method, no shell needed
         recordProcess.StartInfo.UseShellExecute = false;
-        
         // suppresses a blank cmd window from popping up - for Windows OS only
         recordProcess.StartInfo.CreateNoWindow = true;
-        
-        // start the recordings
-        recordProcess.Start();
-        
-        // lastly we add the id and the process to the dictionary
-        _recordings.TryAdd(cameraId, recordProcess);
+
+        if (!_recordings.TryAdd(camera.Id, recordProcess))
+        {
+            recordProcess.Dispose();
+            return;
+        }
+
+        try
+        {
+            recordProcess.Start();
+        }
+        catch
+        {
+            _recordings.TryRemove(camera.Id, out _);
+            recordProcess.Dispose();
+            throw;
+        }
     }
+    
+    //old method, keeping for reference
+    // public void Start(Guid cameraId, string cameraUrl)
+    // {
+    //     
+    //     // guard - if cam in dictionary, return
+    //     if (_recordings.ContainsKey(cameraId))
+    //         return;
+    //     
+    //     // $@ keeps the slashes verbatim and string interpolation
+    //     var recordingDirectory = $@"/Users/michaeldefilippi/rec-test/{cameraId}";
+    //     Directory.CreateDirectory(recordingDirectory);
+    //     
+    //
+    //     var recordProcess = new Process();
+    //     recordProcess.StartInfo.FileName = "/Users/michaeldefilippi/RiderProjects/VideoRecorder/VideoRecorder/ThirdParty/ffmpeg";
+    //     recordProcess.StartInfo.Arguments = $"-rtsp_transport tcp -i \"{cameraUrl}\" " +
+    //                                         $"-c copy " +
+    //                                         $"-f segment -segment_time 300 " +
+    //                                         $"-reset_timestamps 1 -strftime 1 " +
+    //                                         $"-segment_format_options movflags=+frag_keyframe+empty_moov " +
+    //                                         $"\"{recordingDirectory}/%Y%m%d_%H%M%S.mp4\"";
+    //     
+    //     // c# commands are now the keyboard instead of terminal keyboard
+    //     recordProcess.StartInfo.RedirectStandardInput = true;
+    //     
+    //     
+    //     // direct method, no shell needed
+    //     recordProcess.StartInfo.UseShellExecute = false;
+    //     
+    //     // suppresses a blank cmd window from popping up - for Windows OS only
+    //     recordProcess.StartInfo.CreateNoWindow = true;
+    //     
+    //     // start the recordings
+    //     recordProcess.Start();
+    //     
+    //     // lastly we add the id and the process to the dictionary
+    //     _recordings.TryAdd(cameraId, recordProcess);
+    // }
     
     
     // we pull the reference out of the dictionary, to kill
@@ -111,7 +171,7 @@ public class RecordingService
         if (recordingAllowed && !camera.IsRecording)
         {
             var url = $"rtsp://{camera!.Username}:{camera.Password}@{camera.Host}{camera.Path}";
-            Start(camera.Id, url);
+            Start(camera, url);
             
         }
         

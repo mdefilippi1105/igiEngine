@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using VideoRecorder.Database;
 using VideoRecorder.Migrations;
 using VideoRecorder.Models;
@@ -30,7 +31,9 @@ public class RecordingController : Controller
     [HttpPost]
     public async Task<IActionResult> StartRecording(Guid cameraId)
     {
-        var camera = await _context.Camera.FindAsync(cameraId);
+        var camera = await _context.Camera
+            .Include(c => c.Server)
+            .FirstOrDefaultAsync(c => c.Id == cameraId);
         var url = $"rtsp://{camera!.Username}:{camera.Password}@{camera.Host}{camera.Path}";
         
         // guard checks
@@ -39,7 +42,7 @@ public class RecordingController : Controller
         
         _logger.LogInformation("Starting recording for {CameraName}", camera.Name);
         
-        _recording.Start(camera.Id, url);
+        _recording.Start(camera, url);
         
         return Ok();
 
@@ -61,7 +64,9 @@ public class RecordingController : Controller
     [HttpPost]
     public async Task<IActionResult> ToggleRecording(Guid id)
     {
-        var camera  = await _context.Camera.FindAsync(id);
+        var camera  = await _context.Camera
+                            .Include(c => c.Server)
+                            .FirstOrDefaultAsync(c => c.Id == id);
         
         if (camera == null)
             return NotFound();
