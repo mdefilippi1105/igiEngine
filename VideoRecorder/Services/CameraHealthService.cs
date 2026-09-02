@@ -74,22 +74,20 @@ public class CameraHealthService : BackgroundService
                 return false;
 
             // use camera.Host if it's not null, else parse RtspUrl and pull host out of it
-            var host = camera.Host ?? new Uri(camera.RtspUrl!).Host;
+            var host = camera.Host ?? new Uri(camera.RtspUrl!).Host; 
+            
             if (string.IsNullOrEmpty(host))
                 return false;
             
             // set to using to implement IDisposable
             using var ping = new Ping();
             var reply = ping.Send(host, 1000);
-
             return reply.Status == IPStatus.Success;
-
         }
         catch
         {
             return  false;
         }
-        
     }
 
     
@@ -105,40 +103,43 @@ public class CameraHealthService : BackgroundService
             // make a new instance, don't remember everything the main Dbcontext loads
             // then make a fresh connection then return it on dispose()
             var context = scope.ServiceProvider.GetRequiredService<VideoRecorderContext>();
+            
+            try
+            {
+                var cameras = await context.Camera
+                    .Include(c => c.Server)
+                    .ToListAsync(stopToken);
 
-            var cameras = await context.Camera
-                .Include(c => c.Server)
-                .ToListAsync(stopToken);
-            
-            // pass counter. the loop runs every 10 seconds,
-            // so this tracks how many loops have passed
-            _recorderCount++;
-            
-            // check each cam to auth recording
-            foreach (var cam in cameras)
-            {
-                _recording.RecordingAuthorize(cam);
-                _logger.LogInformation("{Name}: rec={R} toggled={T}", cam.Name, cam.IsRecording, cam.UserToggledRecording);
-            }
-            
-            // check each cam to see if online
-            foreach (var cam in cameras)
-            {
-                cam.IsOnline = await SendAsyncHealthCheck(cam);
-            }
-            
-            // 360 counts x 10 seconds = once per hour
-            // then we run DeleteRecordings()
-            if (_recorderCount % 360 == 0)
-            {
+                // pass counter. the loop runs every 10 seconds,
+                // so this tracks how many loops have passed
+                _recorderCount++;
+
+                // check each cam to auth recording
                 foreach (var cam in cameras)
                 {
-                    DeleteOldRecordings(cam);
+                    _recording.RecordingAuthorize(cam);
+                    cam.IsOnline = await SendAsyncHealthCheck(cam);
+                    _logger.LogInformation("{Name}: rec={R} toggled={T}", cam.Name, cam.IsRecording, cam.UserToggledRecording);
                 }
+
+                // 360 counts x 10 seconds = once per hour
+                // then we run DeleteRecordings()
+                if (_recorderCount % 360 == 0)
+                {
+                    foreach (var cam in cameras)
+                    {
+                        DeleteOldRecordings(cam);
+                    }
+                }
+
+                await context.SaveChangesAsync(stopToken);
             }
-            
-            await context.SaveChangesAsync(stopToken);
-            await Task.Delay(10000, stopToken);
+            catch (Exception exception)
+            {
+                _logger.LogError("Health poll failure: " + exception.Message);
+            }
+
+            await Task.Delay(TimeSpan.FromSeconds(10), stopToken);
             
         }
         
