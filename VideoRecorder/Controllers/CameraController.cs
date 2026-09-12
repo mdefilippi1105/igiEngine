@@ -95,12 +95,8 @@ public class CameraController : Controller
     public async Task<IActionResult> Create(Camera camera)
     {
         // guard check - we do not want to add duplicates while saving.
-        if (await _context.Camera.AnyAsync(c => 
-                c.Host == camera.Host || 
-                c.Path == camera.Path || 
-                c.RtspUrl == camera.RtspUrl))
+        if (await _context.Camera.AnyAsync(c => c.Host == camera.Host))
         {
-            
             TempData["AddCameraFail"] =
                 "Camera instance already exists in database. Please check existing cameras and verify duplicate data.";
             return RedirectToAction(nameof(Index));
@@ -123,6 +119,38 @@ public class CameraController : Controller
         return View(camera);
     }
     
+    /*************************************************************************
+     * This is extremely important. Using the UriBuilder we can parse data
+     * instead of having to do this manually, and having to hardcode RTSP
+     * URLs in manually
+     **************************************************************************/
+    
+    private string BuildAuthUri(string streamUri, string user, string password)
+    {
+        var build = new UriBuilder(streamUri); // parse the URI
+        build.UserName = Uri.EscapeDataString(user); //set the user/pass
+        build.Password = Uri.EscapeDataString(password);
+        return build.Uri.AbsoluteUri;       // return rtsp://user:pass@192.168.0.129/onvif-media/....
+    }
+
+    
+    /*************************************************************************
+     * Add camera manually
+     * LoadServersAsync() loads up the available recording servers
+     * so that they are viewable when adding or editing a camera.
+     *
+     **************************************************************************/
+   
+    private async Task LoadServersAsync() =>
+        ViewBag.Servers = new SelectList(
+            await _context.Server
+                .Where(s => s.IsEnabled)
+                .OrderBy(s => s.Name)
+                .ToListAsync(),
+            "Id",
+            "Name");
+    
+    
     [HttpGet]
     public async Task<IActionResult> AddCamera()
     {
@@ -133,10 +161,10 @@ public class CameraController : Controller
     [HttpPost]
     public async Task<IActionResult> AddCamera(Camera camera)
     {
-        if (ManufacturerTable.DefaultRtspPaths == null)
+        if (ManufacturerTable.DefaultRtspPaths == null!)
             camera.Path = "/Streaming/Channels/101";
         
-        if (ManufacturerTable.DefaultRtspPaths.ContainsKey(camera.Manufacturer!))
+        if (ManufacturerTable.DefaultRtspPaths!.ContainsKey(camera.Manufacturer!))
         {
             camera.Path = ManufacturerTable.DefaultRtspPaths[camera.Manufacturer!];
         }
@@ -153,13 +181,25 @@ public class CameraController : Controller
         
         if (ModelState.IsValid) // check data validation
         {
-           
-            _context.Add(camera); // add cam to database context
-            
-            // smush everything together to save as RTSP URL
-            // this is spaghetti but needed to be done
-            camera.RtspUrl = $"rtsp://{camera.Username}:{camera.Password}@{camera.Host}{camera.Path}";
+            var newCam = new Camera
+            {
+                Name = camera.Name,
+                Host = camera.Host,
+                //returns the path if found, or " " if not, no exception
+                Port = camera.Port,
+                Username = camera.Username,
+                Password = camera.Password,
+                Path = ManufacturerTable.DefaultRtspPaths.GetValueOrDefault(camera.Manufacturer ?? "", ""),
+                Manufacturer = camera.Manufacturer,
+                RetentionDays = camera.RetentionDays,
+                ServerId = camera.ServerId,
+                IsEnabled = camera.IsEnabled,
+                CreatedAt = DateTime.UtcNow
 
+            };
+           
+            _context.Add(newCam); // add cam to database context
+            
             await _context.SaveChangesAsync(); // save to the db
             TempData["Success"] = "Camera saved!";
             return RedirectToAction(nameof(Index)); // after saving, send user back to cam list page
@@ -171,15 +211,66 @@ public class CameraController : Controller
 
         return View(camera);
     }
+    
+    /***********************************************************************
+     * Onvif library discovery method:
+     *
+     *
+     *
+     * 
+     *
+     ************************************************************************/
 
-    private async Task LoadServersAsync() =>
-        ViewBag.Servers = new SelectList(
-            await _context.Server
-                .Where(s => s.IsEnabled)
-                .OrderBy(s => s.Name)
-                .ToListAsync(),
-            "Id",
-            "Name");
+    public async Task<IActionResult> Discover(string username, string password)
+    {
+        try
+        {
+            var discovery = new AltOnvifDiscovery();
+            await discovery.DiscoverAsync(username, password);
+            
+            return Json(discovery.OnvifUriList);
+            
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return Json(e.Message);
+            return Json(new List<DiscoveryDevice>());
+        }
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> SaveDiscoveredCameras(string rtspUrl, string? username, string? password)
+    {
+        // skip if this camera is already saved
+        if (await _context.Camera.AnyAsync(c => c.RtspUrl == rtspUrl))
+            return Ok();
+        
+        var uri = new Uri(rtspUrl);
+        var userInfo = uri.UserInfo.Split(':');
+            
+        var camera = new Camera
+        {
+            IsOnvif =  true,
+            Name = uri.Host,
+            RtspUrl = rtspUrl,
+            Scheme = uri.Scheme,
+            Host = uri.Host,
+            Port = uri.Port == -1 ? 554 : uri.Port, // .NET doesnt know RTSP default port
+            Path = uri.PathAndQuery,
+            Username = username,
+            Password = password,
+            IsEnabled = true,
+            CreatedAt = DateTime.Now,
+                
+        };
+            
+        _context.Camera.Add(camera);
+        await _context.SaveChangesAsync();
+        return Ok();
+    }
+
+    
     
     
     // delete the camera
@@ -243,17 +334,7 @@ public class CameraController : Controller
         return View(camera);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> EditRtspCamera(Camera camera)
-    {
-        if (ModelState.IsValid)
-        {
-            _context.Camera.Update(camera);
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Camera updated successfully!";
-        }
-        return RedirectToAction(nameof(Index));
-    }
+
     
     
     /***********************************************************************
@@ -301,14 +382,6 @@ public class CameraController : Controller
      * Stream via ONVIF discovered cameras. First we create an authorize
      * URI, then we hand that over to OpenOnvifSession()
      ************************************************************************/
-
-    private string BuildAuthUri(string streamUri, string user, string password)
-    {
-        var build = new UriBuilder(streamUri); // parse the ONVIF URI
-        build.UserName = Uri.EscapeDataString(user); //set the user/pass
-        build.Password = Uri.EscapeDataString(password);
-        return build.Uri.AbsoluteUri;       // return rtsp://user:pass@192.168.0.129/onvif-media/....
-    }
     
     public IActionResult OpenOnvifSession(Guid id)
     {
@@ -496,61 +569,7 @@ public class CameraController : Controller
         return View();
     }
     
-    
-    /***********************************************************************
-    * Onvif library discovery method:
-    * 
-    ************************************************************************/
-
-    public async Task<IActionResult> Discover(string username, string password)
-    {
-        try
-        {
-            var discovery = new AltOnvifDiscovery();
-            await discovery.DiscoverAsync(username, password);
-            
-            return Json(discovery.OnvifUriList);
-            
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return Json(e.Message);
-            return Json(new List<DiscoveryDevice>());
-        }
-    }
-    
-    [HttpPost]
-    public async Task<IActionResult> SaveDiscoveredCameras(string rtspUrl, string? username, string? password)
-    {
-            // skip if this camera is already saved
-            if (await _context.Camera.AnyAsync(c => c.RtspUrl == rtspUrl))
-                return Ok();
-        
-            var uri = new Uri(rtspUrl);
-            var userInfo = uri.UserInfo.Split(':');
-            
-            var camera = new Camera
-            {
-                IsOnvif =  true,
-                Name = uri.Host,
-                RtspUrl = rtspUrl,
-                Scheme = uri.Scheme,
-                Host = uri.Host,
-                Port = uri.Port == -1 ? 554 : uri.Port, // .NET doesnt know RTSP default port
-                Path = uri.PathAndQuery,
-                Username = username,
-                Password = password,
-                IsEnabled = true,
-                CreatedAt = DateTime.Now,
-                
-            };
-            
-        _context.Camera.Add(camera);
-        await _context.SaveChangesAsync();
-        return Ok();
-    }
-    
+ 
     
     /************************************************************************
      *  Ping device and ping subnet

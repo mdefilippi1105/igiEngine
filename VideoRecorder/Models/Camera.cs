@@ -55,6 +55,8 @@ public class Camera
     
     public bool IsOnvif { get; set; }
     
+    public bool RtspManuallyAdded { get; set; } 
+    
     [StringLength(100)]
     public string? Model { get; set; }
     
