@@ -257,18 +257,14 @@
                 <td>@(camera.IsEnabled ? "Yes" : "No")</td>
                 
                 
-                @* this creates a badge based on how the device was added. 
-                     i will add more protocol badges as time goes on.
-                     RtspUrl?.ToLower().Contains converts the text to lower and then runs a check *@
+                @* this creates a badge based on how the device was added. *@
                 <td>
-                    @if (camera.RtspUrl != null 
-                         && camera.RtspUrl?.ToLower().Contains("onvif") == true)
+                    @if (camera.RtspUrl != null && camera.IsOnvif) // onvif added
                     {
                         <span style="color: #c4c4f3; background: transparent;border: 1px solid #c4c4f3; font-family: 'Courier New', monospace;" class="badge">ONVIF</span> 
                     }
 
-                    else if (camera.RtspUrl != null 
-                             && camera.RtspUrl?.ToLower().Contains("rtsp") == true)
+                    else if (camera.RtspUrl != null && !camera.IsOnvif) // rtsp added
                     {
                         <span style="color: #fa8080; background: transparent;border: 1px solid #FA8080FF; font-family: 'Courier New', monospace;" class="badge ">RTSP</span>
                     }
@@ -318,6 +314,8 @@
                         string action;
                         if (camera.Manufacturer.IsNullOrEmpty())
                             action = "OpenRtspSession";
+                        if (camera.IsOnvif)
+                            action = "OpenOnvifSession";
                         else
                             action = "OpenCameraObjectSession";
                     }
@@ -684,7 +682,7 @@
                 
                 // we're adding a save button if devices are found
                 // show the devices. button fires JS below, bind to save button
-                html += `<p>${devices[i]}</p><button class="btn btn-sm btn-ffx" onclick="saveDiscovered('${devices[i]}')">Save</button>`;            }
+                html += `<p>${devices[i]}</p><button type="button" class="btn btn-sm btn-ffx" onclick="saveDiscovered('${devices[i]}', this)">Save</button>`;            }
             document.getElementById('onvifResults').innerHTML = html;
         }
     </script>
@@ -692,16 +690,27 @@
     
     
     <script>
-        
-        async function saveDiscovered (uri) {
-            await fetch ('/Camera/SaveDiscoveredCameras/', {
+        async function saveDiscovered(rtspUrl, btn) {
+            
+            const response = await fetch('/Camera/SaveDiscoveredCameras', { 
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify([uri])
+                body: new URLSearchParams({ // packs the values as form data, which MVC binds to the actions parameters
+                    rtspUrl,
+                    username: document.getElementById('onvifUsername').value,
+                    password: document.getElementById('onvifPassword').value
+                })
             });
-            bootstrap.Modal.getInstance(document.getElementById('discoverModalOnvif')).hide();
-            location.reload();
+            if (!response.ok) {
+                btn.textContent = 'Failed';
+                return;
+            }
+            btn.disabled = true;        // prevents saving the camera twice
+            btn.textContent = 'Saved';
         }
+            
+       // refresh the camera table once, when the modal closes
+        document.getElementById('discoverModalOnvif')
+            .addEventListener('hidden.bs.modal', () => location.reload());
         
     </script>
     

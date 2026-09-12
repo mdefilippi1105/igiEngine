@@ -500,6 +500,34 @@ This popup appears when deleting a camera. If yes is clicked, delete.
     </script>
 }
 
+
+@if (TempData["AddCameraFail"] != null)
+{
+    <script>
+        Swal.fire({
+            title: 'Unable to add camera.',
+            text: '@TempData["AddCameraFail"]',
+            icon: 'warning',
+            showConfirmButton: true,
+            showCancelButton: true,
+            ConfirmButtonText: 'Yes',
+            cancelButtonText: 'No',
+            background: '#1a1a2e',        // dark background
+            color: '#ffffff',             // white text
+            confirmButtonColor: '#6655cc', // bootstrap blue
+            timeout: 3000
+        }).then((result) => {
+            if (result.isConfirmed) {
+                
+            }
+        });
+    </script>
+}
+
+
+
+
+
 </body>
 
 </html>

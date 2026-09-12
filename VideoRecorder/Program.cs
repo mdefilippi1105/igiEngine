@@ -2,6 +2,7 @@
 // Born: Feb 23 19:10:51 2026
 
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using VideoRecorder.Database;
@@ -25,16 +26,19 @@ using VideoRecorder.Services;
     //DONE: check out bugs with onvif discovery
     //DONE: Fix ping - shows success incorrectly
     //DONE: fix response issue for recording button
-    //TODO: discovered devices: clear devices button (maybe add these to a list<>())
+    //DONE: discovered devices: clear devices button (maybe add these to a list<>())
+    //DONE: When discovering onvif cams, save button saves all instead of one at a time
     //TODO: discovered devices: show mac address
     //TODO: discovered devices: highlight devices that are actually network cams
     //TODO: Convert comments to <param> style
-    //TODO: When discovering onvif cams, save button saves all instead of one at a time
     //TODO: program crashes when saving camera with an empty field
     //TODO: create a default admin username built - in
     //TODO: find way to obscure username/pass in rtsp url
     //TODO: find way to obscure username/pass in ffmpeg stderr
+    //TODO ^^^^ see if IDataProtector fixes both of these
     //TODO: add devices through csv
+    //TODO: add a way to select cameras for certain views
+    //TODO: allow an option for pop-out window when viewing live - single or multiviews
     
 
 
@@ -49,8 +53,13 @@ using VideoRecorder.Services;
 
     //register the db so controllers can use it
     builder.Services.AddDbContext<VideoRecorderContext>(options =>
-       options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")) ); 
+       options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")) );
 
+    builder.Services.AddControllersWithViews(options =>
+        options.Filters.Add(new AuthorizeFilter()));
+    
+    
+    
     //add cookie auth stuff
     builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme) // set up cookie auth
         .AddCookie(options =>
@@ -84,12 +93,12 @@ using VideoRecorder.Services;
 
     app.UseRouting(); //turn on routing so URLS work
 
+    app.UseAuthentication();
+    app.UseAuthorization();
+    
     // default URL pattern: website.com/Camera/Index
     app.MapControllerRoute(
         name: "default",
         pattern: "{controller=Home}/{action=Index}/{id?}");
-
-    app.UseAuthentication();
-    app.UseAuthorization();
 
     app.Run();    //run

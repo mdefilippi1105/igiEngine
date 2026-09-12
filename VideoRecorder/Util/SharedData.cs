@@ -12,7 +12,6 @@ public class SharedData
     // store streaming object itself
     public static ConcurrentDictionary<string, StreamVideo> StreamObjects = new();
     
-    public static int StreamCount = 0;
 
     public static string ListStreams()
     {

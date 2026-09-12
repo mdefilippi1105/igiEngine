@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VideoRecorder.Database;
@@ -6,7 +7,7 @@ using VideoRecorder.Models;
 using VideoRecorder.Services;
 
 namespace VideoRecorder.Controllers;
-
+[AllowAnonymous]
 public class RecordingController : Controller
 {
     // the tools this controller needs. we store these as fields so 

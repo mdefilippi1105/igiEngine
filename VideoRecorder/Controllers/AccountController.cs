@@ -3,12 +3,14 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using VideoRecorder.Database;
 using VideoRecorder.Models;
 
 namespace VideoRecorder.Controllers;
+[AllowAnonymous]
 public class AccountController : Controller
 
 {

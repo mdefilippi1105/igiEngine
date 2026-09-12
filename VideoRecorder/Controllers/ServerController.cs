@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +7,7 @@ using VideoRecorder.Models;
 
 namespace VideoRecorder.Controllers;
 
+[AllowAnonymous]
 public class ServerController : Controller
 {
     private readonly VideoRecorderContext _context;

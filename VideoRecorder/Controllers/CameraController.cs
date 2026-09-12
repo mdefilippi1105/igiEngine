@@ -21,7 +21,7 @@ namespace VideoRecorder.Controllers;
  * class inherits everything from .NET controller class
  ***************************************************************************/
 
-[Authorize]
+[AllowAnonymous]
 public class CameraController : Controller 
 {
     // the tools this controller needs. we store these as fields so 
@@ -94,6 +94,19 @@ public class CameraController : Controller
     [HttpPost]
     public async Task<IActionResult> Create(Camera camera)
     {
+        // guard check - we do not want to add duplicates while saving.
+        if (await _context.Camera.AnyAsync(c => 
+                c.Host == camera.Host || 
+                c.Path == camera.Path || 
+                c.RtspUrl == camera.RtspUrl))
+        {
+            
+            TempData["AddCameraFail"] =
+                "Camera instance already exists in database. Please check existing cameras and verify duplicate data.";
+            return RedirectToAction(nameof(Index));
+        }
+        camera.RtspUrl = $"rtsp://{camera.Username}:{camera.Password}@{camera.Host}{camera.Path}";
+
         if (ModelState.IsValid) // check data validation
         {
             _context.Add(camera); // add cam to database context
@@ -128,10 +141,24 @@ public class CameraController : Controller
             camera.Path = ManufacturerTable.DefaultRtspPaths[camera.Manufacturer!];
         }
         
+        // guard check - we do not want to add duplicates while saving.
+        if (await _context.Camera.AnyAsync(c => c.Host == camera.Host))
+        {
+            
+            TempData["AddCameraFail"] =
+                "Camera instance already exists in database. Please check existing cameras and verify duplicate data.";
+            return RedirectToAction(nameof(Index));
+        }
+        
         
         if (ModelState.IsValid) // check data validation
         {
+           
             _context.Add(camera); // add cam to database context
+            
+            // smush everything together to save as RTSP URL
+            // this is spaghetti but needed to be done
+            camera.RtspUrl = $"rtsp://{camera.Username}:{camera.Password}@{camera.Host}{camera.Path}";
 
             await _context.SaveChangesAsync(); // save to the db
             TempData["Success"] = "Camera saved!";
@@ -248,7 +275,7 @@ public class CameraController : Controller
             
             stream.StreamDataTest(camera.RtspUrl, camera.Id);
             SharedData.ActiveStreams[camera.Name] = streamId;
-            SharedData.StreamCount++;
+            
             
             var data = SharedData.ListStreams();
             Console.WriteLine(data);
@@ -269,6 +296,54 @@ public class CameraController : Controller
         return RedirectToAction(nameof(LiveView), new { id = id });
     }
     
+    
+    /***********************************************************************
+     * Stream via ONVIF discovered cameras. First we create an authorize
+     * URI, then we hand that over to OpenOnvifSession()
+     ************************************************************************/
+
+    private string BuildAuthUri(string streamUri, string user, string password)
+    {
+        var build = new UriBuilder(streamUri); // parse the ONVIF URI
+        build.UserName = Uri.EscapeDataString(user); //set the user/pass
+        build.Password = Uri.EscapeDataString(password);
+        return build.Uri.AbsoluteUri;       // return rtsp://user:pass@192.168.0.129/onvif-media/....
+    }
+    
+    public IActionResult OpenOnvifSession(Guid id)
+    {
+        var camera = _context.Camera.Find(id);
+        var stream = new StreamVideo();
+        
+        var streamId = $"Stream_{camera!.Id}";
+        var connectionTimer = Stopwatch.StartNew();
+        var onvifUri = BuildAuthUri(camera.RtspUrl!, camera.Username!, camera.Password!);
+        
+        if (camera.IsEnabled)
+        {
+            stream.StreamDataTest(onvifUri, camera.Id);
+            SharedData.ActiveStreams[camera.Name] = streamId;
+            
+            
+            var data = SharedData.ListStreams();
+            Console.WriteLine(data);
+            connectionTimer.Stop();
+        }
+        // set a timer for 9 seconds...10 seems excessive
+        else if (connectionTimer.ElapsedMilliseconds > 9000)
+        {
+            TempData["ConnectFail"] = $"Could not reach {camera.Host}. " + "Please check network connection or " + "try the built in ping tool.";
+        }
+        
+        else
+        {
+            TempData["Error"] = "Camera is not enabled.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        return RedirectToAction(nameof(LiveView), new { id = id });
+    }
+
     /***********************************************************************
      * This is basically the same as above
      * Instead of streaming the rtsp URL as one giant string,
@@ -301,18 +376,15 @@ public class CameraController : Controller
         
         // add to list of streams
         SharedData.ActiveStreams[camera.Name!] = streamId;
-        SharedData.StreamCount++;
         Console.WriteLine(SharedData.ListStreams());
         
         
         return RedirectToAction(nameof(LiveView), new { id = id });
     }
     
-    
     /***********************************************************************
     * Shut down a camera stream.
      ************************************************************************/
-
     [HttpPost]
     //take a key (dictionary key - the ip or cam name)
     public IActionResult DestroyStream(string id)
@@ -436,7 +508,7 @@ public class CameraController : Controller
         {
             var discovery = new AltOnvifDiscovery();
             await discovery.DiscoverAsync(username, password);
-            await SaveDiscoveredCameras(discovery.OnvifUriList!);
+            
             return Json(discovery.OnvifUriList);
             
         }
@@ -449,10 +521,12 @@ public class CameraController : Controller
     }
     
     [HttpPost]
-    public async Task SaveDiscoveredCameras(List<string> rtspUrls)
+    public async Task<IActionResult> SaveDiscoveredCameras(string rtspUrl, string? username, string? password)
     {
-        foreach (var rtspUrl in rtspUrls)
-        {
+            // skip if this camera is already saved
+            if (await _context.Camera.AnyAsync(c => c.RtspUrl == rtspUrl))
+                return Ok();
+        
             var uri = new Uri(rtspUrl);
             var userInfo = uri.UserInfo.Split(':');
             
@@ -463,23 +537,18 @@ public class CameraController : Controller
                 RtspUrl = rtspUrl,
                 Scheme = uri.Scheme,
                 Host = uri.Host,
-                Port = uri.Port,
-                Path = uri.AbsolutePath,
-
-                // if the array has 1 element, take the first one: username
-                // if the array has at least 2 elements, take the second one: password
-                // the reason for this is if there is no user creds in the string
-                // so splitting on ":" with empty string will get IndexOutOfBounds
-                Username = userInfo.Length > 0 ? userInfo[0] : null,
-                Password = userInfo.Length > 1 ? userInfo[1] : null,
-
+                Port = uri.Port == -1 ? 554 : uri.Port, // .NET doesnt know RTSP default port
+                Path = uri.PathAndQuery,
+                Username = username,
+                Password = password,
                 IsEnabled = true,
                 CreatedAt = DateTime.Now,
+                
             };
             
-            _context.Camera.Add(camera);
-        }
+        _context.Camera.Add(camera);
         await _context.SaveChangesAsync();
+        return Ok();
     }
     
     
