@@ -313,7 +313,7 @@
                 <td>
                     @{
                         string action;
-                        if (camera.RtspUrl != null)
+                        if (!string.IsNullOrWhiteSpace(camera.RtspUrl))
                             action = "OpenRtspSession";
                         else if (camera.IsOnvif)
                             action = "OpenOnvifSession";
