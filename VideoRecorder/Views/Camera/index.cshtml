@@ -308,13 +308,14 @@
                 
                 @* This is a check to see how the camera was added to the db.
                     If the camera was added with the rtsp URL > use OpenRtspSession
+                    If the camera is onvif > use OpenOnvifSession
                     If the camera was added manually > use OpenCameraObjectSession *@
                 <td>
                     @{
                         string action;
-                        if (camera.Manufacturer.IsNullOrEmpty())
+                        if (camera.RtspUrl != null)
                             action = "OpenRtspSession";
-                        if (camera.IsOnvif)
+                        else if (camera.IsOnvif)
                             action = "OpenOnvifSession";
                         else
                             action = "OpenCameraObjectSession";
@@ -325,7 +326,6 @@
                        style="background:#1e2550; 
                        border:1px solid #330860; 
                        color:#fafafa;"
-                       button type="button"
                        data-toggle="tooltip"
                        data-placement="top"
                        title="View camera stream live">Live

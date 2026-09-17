@@ -39,6 +39,7 @@ using VideoRecorder.Services;
     //TODO: add devices through csv
     //TODO: add a way to select cameras for certain views
     //TODO: allow an option for pop-out window when viewing live - single or multiviews
+    //TODO: extend timeout duration for live views
     
 
 

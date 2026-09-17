@@ -77,7 +77,7 @@ public class CameraController : Controller
 
     
     /*************************************************************************
-     * This runs when someone clicks "+ add camera", just shows empty form
+     * This runs when someone clicks "+ add RTSP", just shows empty form
      * The second method is same as Create() but accepts a cam.
      * When form is submitted .NET automatically fills the camera object with
      * whatever the user typed in.
@@ -95,20 +95,24 @@ public class CameraController : Controller
     public async Task<IActionResult> Create(Camera camera)
     {
         // guard check - we do not want to add duplicates while saving.
-        if (await _context.Camera.AnyAsync(c => c.Host == camera.Host))
+        if (await _context.Camera.AnyAsync(c => c.RtspUrl == camera.RtspUrl))
         {
             TempData["AddCameraFail"] =
-                "Camera instance already exists in database. Please check existing cameras and verify duplicate data.";
+                "RTSP address already in use. Please use alternate address.";
             return RedirectToAction(nameof(Index));
         }
-        camera.RtspUrl = $"rtsp://{camera.Username}:{camera.Password}@{camera.Host}{camera.Path}";
 
+        
         if (ModelState.IsValid) // check data validation
         {
+            camera.RtspUrl = $"{camera.RtspUrl}"; // hack move, sorry
+
             _context.Add(camera); // add cam to database context
 
             await _context.SaveChangesAsync(); // save to the db
+            
             TempData["Success"] = "Camera saved!";
+            
             return RedirectToAction(nameof(Index)); // after saving, send user back to cam list page
         }
         else
@@ -313,12 +317,13 @@ public class CameraController : Controller
     [HttpPost]
     public async Task<IActionResult> EditRtsp(Camera camera)
     {
-        if (ModelState.IsValid)
-        {
-            _context.Camera.Update(camera);
+        // if (ModelState.IsValid) { } we dont need this for now
+        
+
+        _context.Camera.Update(camera);
             await _context.SaveChangesAsync();
             TempData["Success"] = "Camera edited successfully!";
-        }
+        
         return RedirectToAction(nameof(Index));
     }
     
