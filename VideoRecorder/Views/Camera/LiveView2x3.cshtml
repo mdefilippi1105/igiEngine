@@ -53,7 +53,7 @@
         const hls = new Hls({
             manifestLoadingMaxRetry: 10,
             manifestLoadingRetryDelay: 2000,
-            manifestLoadingMaxRetryTimeout: 64000,
+            manifestLoadingMaxRetryTimeout: 12000,
         });
         
         setTimeout(function() {
@@ -79,7 +79,7 @@
                     });
                 }
             });
-        }, 6000);
+        }, 12000);
     }
     
     @foreach (var cam in ViewBag.Cameras)

@@ -44,7 +44,7 @@
         </div>
         
         <div class="mb-3">
-            <label asp-for="RetentionDays" class="form-label">Recording Retention Time</label>
+            <label asp-for="RetentionDays" class="form-label">Video Storage</label>
             <select asp-for="RetentionDays" class="form-select" style="width: 140px;">
                 <option value="7">7 days</option>
                 <option value="14">14 days</option>
@@ -52,6 +52,15 @@
                 <option value="90">90 days</option>
             </select>
         </div>
+        
+        <div class="mb-3">
+            <label asp-for="ServerId" class="form-label">Recording Server</label>
+            <select asp-for="ServerId" asp-items="ViewBag.Servers" class="form-select" style="width: 140px;">
+                <option value="">-- none --</option>
+            </select>
+            <span asp-validation-for="ServerId" class="text-danger"></span>
+        </div>
+
 
         @* Enabled checkbox *@
         <div class="mb-3 d-flex align-items-center gap-2">

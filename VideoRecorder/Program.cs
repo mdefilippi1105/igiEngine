@@ -28,8 +28,10 @@ using VideoRecorder.Services;
     //DONE: fix response issue for recording button
     //DONE: discovered devices: clear devices button (maybe add these to a list<>())
     //DONE: When discovering onvif cams, save button saves all instead of one at a time
-    //TODO: discovered devices: show mac address
-    //TODO: discovered devices: highlight devices that are actually network cams
+    //DONE: NOT NEEDED discovered devices: highlight devices that are actually network cams
+    //DONE: NOT NEEDED discovered devices: show mac address
+    //DONE: extend timeout duration for live views
+    //DONE: Onvif connection issues, 404-unauthorized
     //TODO: Convert comments to <param> style
     //TODO: program crashes when saving camera with an empty field
     //TODO: create a default admin username built - in
@@ -39,7 +41,9 @@ using VideoRecorder.Services;
     //TODO: add devices through csv
     //TODO: add a way to select cameras for certain views
     //TODO: allow an option for pop-out window when viewing live - single or multiviews
-    //TODO: extend timeout duration for live views
+    //TODO: make confirm buttons on sweetalert consistent
+    //TODO: consider streaming the video from MTX relay vs the cam itself
+    //TODO: arp scanner hangs up on "please wait"
     
 
 
@@ -58,7 +62,6 @@ using VideoRecorder.Services;
 
     builder.Services.AddControllersWithViews(options =>
         options.Filters.Add(new AuthorizeFilter()));
-    
     
     
     //add cookie auth stuff

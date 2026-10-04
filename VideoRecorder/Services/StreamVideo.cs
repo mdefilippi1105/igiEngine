@@ -26,8 +26,10 @@ public class StreamVideo : IDisposable
             _fProcess.StartInfo.Arguments = $"-hide_banner " +
                                            $"-loglevel verbose " +
                                            $"-rtsp_transport tcp -i \"{filename}\" " +
-                                           $"-c:v copy -f rtsp " +
-                                           $"rtsp://localhost:8554/live/{cameraId}";            
+                                           $"-c:v copy " +
+                                           $"-c:a aac -b:a 64k " + 
+                                           " -f rtsp " +
+                                           $"rtsp://localhost:8555/live/{cameraId}";            
             _fProcess.StartInfo.RedirectStandardError = true;
             _fProcess.StartInfo.UseShellExecute = false;
             

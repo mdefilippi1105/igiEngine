@@ -6,45 +6,46 @@
 <div class="container mt-4" style="max-width: 600px;">
     <h2 class="text-white">Edit Camera</h2>
     
-    <form asp-action="AddCamera" autocomplete="off">
-        
+    <form asp-action="EditCamera" autocomplete="off">
+        <input type="hidden" asp-for="Id" />
+
         @* Name field *@
         <div class="mb-3 ">
             <label asp-for="Name" class="form-label"></label>
             <input asp-for="Name" class="form-control" style="width: 180px;"/>
         </div>
-        
+
         @*Description Field*@
         <div class="mb-3 ">
             <label asp-for="Description" class="form-label"></label>
-            <input asp-for="Description" class="form-control" style="width: 180px;" />
+            <input asp-for="Description" class="form-control" style="width: 180px;"/>
         </div>
-        
+
         @* Host field *@
         <div class="mb-3 ">
             <label asp-for="Host" class="form-label"></label>
-            <input asp-for="Host" class="form-control" style="width: 180px;" />
+            <input asp-for="Host" class="form-control" style="width: 180px;"/>
         </div>
 
         @* Port Field *@
         <div class="mb-3">
             <label asp-for="Port" class="form-label"></label>
-            <input asp-for="Port" class="form-control" style="width: 100px;" type="number" />
+            <input asp-for="Port" class="form-control" style="width: 100px;" placeholder="554" type="number"/>
         </div>
-        
+
         @* Username field *@
         <div class="mb-3 text-white">
             <label asp-for="Username" class="form-label"></label>
             <input asp-for="Username" class="form-control" style="width: 100px;"/>
         </div>
-        
+
         @* Password field *@
         <div class="mb-3 text-white">
             <label asp-for="Password" class="form-label"></label>
-            <input asp-for="Password" class="form-control" style="width: 100px;" />
+            <input asp-for="Password" class="form-control" style="width: 100px;"/>
         </div>
-        
-        
+
+
         @* drop down menu for cam manufacturers *@
         <div class="mb-3">
             <label asp-for="Manufacturer" class="form-label "></label>
@@ -59,13 +60,15 @@
             </select>
         </div>
 
-        
-        @* Enabled checkbox *@
-        <div class="mb-3 d-flex align-items-center gap-2">
-            <input asp-for="IsEnabled" class="form-check-input" style="width: 1rem; height: 1rem;" />
-            <label asp-for="IsEnabled" class="form-check-label"></label>
+        <div class="mb-3">
+            <label asp-for="ServerId" class="form-label">Recording Server</label>
+            <select asp-for="ServerId" asp-items="ViewBag.Servers" class="form-select" style="width: 140px;">
+                <option value="">-- none --</option>
+            </select>
+            <span asp-validation-for="ServerId" class="text-danger"></span>
         </div>
-        
+
+
         <div class="mb-3">
             <label asp-for="RetentionDays" class="form-label">Video Storage</label>
             <select asp-for="RetentionDays" class="form-select" style="width: 140px;">
@@ -76,25 +79,72 @@
             </select>
         </div>
 
+
+        @* Enabled checkbox *@
+        <div class="mb-3 d-flex align-items-center gap-2">
+            <input asp-for="IsEnabled" class="form-check-input" style="width: 1rem; height: 1rem;"/>
+            <label asp-for="IsEnabled" class="form-check-label"></label>
+        </div>
+
         @* Buttons *@
         <button type="submit" class="btn btn-lg btn-ffx">Save</button>
-        
+
         <a
             asp-action="Index"
             class="btn btn-lg btn-ffx">Cancel
         </a>
-        
+
         <a
             onclick="showPing()"
             class="btn btn-lg btn-ffx ">Ping
         </a>
-        
+
         <a
             class="btn btn-lg btn-ffx "
             data-bs-toggle="modal"
             data-bs-target="#arpModal">
             ARP
         </a>
-        
+
     </form>
 </div>
+<script>
+            function showPing() {
+                Swal.fire({
+                    title: 'Ping',
+                    input: 'text',
+                    inputPlaceholder: '192.168.1.1',
+                    background: '#1a1a2e',
+                    color: '#ffffff',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ping'
+                }).then((result) => {
+                    // result is the data from the input field
+                    // if user hits confirm button:
+                    if (result.isConfirmed) {
+                        console.log(result.value);
+                        //return the ip to the URL. ?ip= is the value
+                        window.location.href = '/Camera/PingAddress?ip=' + result.value;
+                    }
+                })
+            }
+
+        document.getElementById('arpModal').addEventListener('shown.bs.modal',
+        
+        async function showArp () {
+            
+            const response = await fetch('/Camera/Arp/'); 
+            const devices = await response.json();
+            let html = '';
+            
+            if (devices.length === 0) {
+                html = '<p> No devices found.</p>';
+            }
+            
+            for (let i = 0; i < devices.length; i++) 
+            {
+                html += '<p>' + devices[i] + '</p>';
+            }
+            document.getElementById('arpResults').innerHTML = html;
+        });
+    </script>

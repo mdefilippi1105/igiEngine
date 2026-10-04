@@ -42,7 +42,7 @@
         const hls = new Hls({
             manifestLoadingMaxRetry: 10,
             manifestLoadingRetryDelay: 2000,
-            manifestLoadingMaxRetryTimeout: 64000,
+            manifestLoadingMaxRetryTimeout: 12000,
         });
         setTimeout(function() {
             hls.loadSource('http://localhost:8888/live/@ViewData["CameraId"]/index.m3u8');
@@ -67,7 +67,7 @@
                     });
                 }
             });
-        }, 5000);
+        }, 12000);
     }
     
 </script>

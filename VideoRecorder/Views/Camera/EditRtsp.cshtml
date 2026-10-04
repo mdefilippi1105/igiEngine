@@ -36,6 +36,15 @@
         <option value="90">90 days</option>
     </select>
 </div>
+        
+<div class="mb-3">
+    <label asp-for="ServerId" class="form-label">Recording Server</label>
+    <select asp-for="ServerId" asp-items="ViewBag.Servers" class="form-select" style="width: 140px;">
+        <option value="">-- none --</option>
+    </select>
+    <span asp-validation-for="ServerId" class="text-danger"></span>
+</div>
+
 
 
 @* Enabled checkbox *@

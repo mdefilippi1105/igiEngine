@@ -313,7 +313,7 @@
                 <td>
                     @{
                         string action;
-                        if (!string.IsNullOrWhiteSpace(camera.RtspUrl))
+                        if (camera.RtspManuallyAdded)
                             action = "OpenRtspSession";
                         else if (camera.IsOnvif)
                             action = "OpenOnvifSession";
@@ -404,28 +404,29 @@
     
     <div class="modal fade" id="discoverModalOnvif" tabindex="-1">
         <div class="modal-dialog">
-            <div class="modal-content bg-dark text-white">
+            <form asp-action="SaveDiscovered" method="post" class="modal-content bg-dark text-white">   <!-- the form is the modal-content -->
                 <div class="modal-header">
                     <h5 class="modal-title">Discover ONVIF Cameras</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-            
+
                 <div class="modal-body">
                     <div class="mb-3">
                         <label>Username</label>
-                        <input type="text" id="onvifUsername" class="form-control bg-dark text-white" value="root" />
+                        <input type="text" id="onvifUsername" name="username" class="form-control bg-dark text-white" value="root"/>
                     </div>
                     <div class="mb-3">
                         <label>Password</label>
-                        <input type="password" id="onvifPassword" class="form-control bg-dark text-white" />
+                        <input type="password" id="onvifPassword" name="password" class="form-control bg-dark text-white"/>
                     </div>
                     <div id="onvifResults"></div>
                 </div>
-            
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-ffx" data-bs-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-sm btn-ffx" onclick="runOnvifDiscover()">Scan</button>
                 </div>
+            </form>
             </div>
         </div>
     </div>
@@ -577,7 +578,6 @@
         </div>
     </div>
     
-</div>   
     
     @*************************************************************************
                             javascript

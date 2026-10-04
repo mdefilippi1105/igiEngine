@@ -25,25 +25,19 @@ public class AltOnvifDiscovery
         
         await foreach (var device in discovery.DiscoverAsync(5, cancellationToken))
         {
-            
-            Console.WriteLine($"Found: {device.Mfr} {device.Model} at {device.Address}. Time is {DateTime.Now}");
-            Console.WriteLine($"XAddress : {device.XAddresses.First()}");
             try
             {
                 //create the Media client. this includes SOAP binding,
                 //gets the media service URL by requesting cams capabilities
                 //create the end point
                 var media = await OnvifClientFactory.CreateMediaClientAsync(device.Address, username, password);
-            
                 
                 //ask cam for list of stream profiles
                 var profilesResponse = await media.GetProfilesAsync();
-            
                 
                 //grab the token - an id you pass to GetStreamUri - "give me the URL for this stream"
                 string token = profilesResponse.Profiles[0].token;
                 Console.WriteLine($"Token: {token}");
-                
                 
                 //set up the stream object with these params
                 var streamSetup = new StreamSetup()

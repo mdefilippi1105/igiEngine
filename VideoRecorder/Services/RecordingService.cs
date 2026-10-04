@@ -55,7 +55,8 @@ public class RecordingService
         var recordProcess = new Process();
         recordProcess.StartInfo.FileName = _ffmpegPath;
         recordProcess.StartInfo.Arguments = $"-rtsp_transport tcp -i \"{cameraUrl}\" " +
-                                            $"-c copy " +
+                                            $"-c:v copy " +              // pass video through untouched
+                                            $"-c:a aac -b:a 64k " + 
                                             $"-f segment -segment_time 300 " +
                                             $"-reset_timestamps 1 -strftime 1 " +
                                             $"-segment_format_options movflags=+frag_keyframe+empty_moov " +

@@ -74,7 +74,6 @@ public class CameraController : Controller
         
         return View(cameras); // send list of cams to index to be displayed
     }
-
     
     /*************************************************************************
      * This runs when someone clicks "+ add RTSP", just shows empty form
@@ -106,6 +105,7 @@ public class CameraController : Controller
         if (ModelState.IsValid) // check data validation
         {
             camera.RtspUrl = $"{camera.RtspUrl}"; // hack move, sorry
+            camera.RtspManuallyAdded = true;
 
             _context.Add(camera); // add cam to database context
 
@@ -169,19 +169,14 @@ public class CameraController : Controller
             camera.Path = "/Streaming/Channels/101";
         
         if (ManufacturerTable.DefaultRtspPaths!.ContainsKey(camera.Manufacturer!))
-        {
             camera.Path = ManufacturerTable.DefaultRtspPaths[camera.Manufacturer!];
-        }
         
         // guard check - we do not want to add duplicates while saving.
         if (await _context.Camera.AnyAsync(c => c.Host == camera.Host))
         {
-            
-            TempData["AddCameraFail"] =
-                "Camera instance already exists in database. Please check existing cameras and verify duplicate data.";
+            TempData["AddCameraFail"] = "IP Address exists already. ";
             return RedirectToAction(nameof(Index));
         }
-        
         
         if (ModelState.IsValid) // check data validation
         {
@@ -189,39 +184,146 @@ public class CameraController : Controller
             {
                 Name = camera.Name,
                 Host = camera.Host,
-                //returns the path if found, or " " if not, no exception
                 Port = camera.Port,
+                Description = camera.Description,
                 Username = camera.Username,
                 Password = camera.Password,
-                Path = ManufacturerTable.DefaultRtspPaths.GetValueOrDefault(camera.Manufacturer ?? "", ""),
                 Manufacturer = camera.Manufacturer,
                 RetentionDays = camera.RetentionDays,
                 ServerId = camera.ServerId,
                 IsEnabled = camera.IsEnabled,
-                CreatedAt = DateTime.UtcNow
-
+                CreatedAt = DateTime.UtcNow,
+                //returns the path if found, or " " if not, no exception
+                Path = ManufacturerTable.DefaultRtspPaths.GetValueOrDefault(camera.Manufacturer ?? "", ""),
             };
            
             _context.Add(newCam); // add cam to database context
-            
             await _context.SaveChangesAsync(); // save to the db
+            
             TempData["Success"] = "Camera saved!";
+            
             return RedirectToAction(nameof(Index)); // after saving, send user back to cam list page
         }
         else
         {
             TempData["Error"] = "Could not add camera.";
         }
-
+        
+        await LoadServersAsync(); // reload the server list 
         return View(camera);
     }
     
+    
+    // delete the camera
+    public async Task<IActionResult> RemoveCamera(Guid id)
+    {
+        try
+        {
+            var camera = await _context.Camera.FindAsync(id);
+            if (camera == null)
+            {
+                TempData["Error"] = "Nothing to delete!";
+                return NotFound();
+            }
+            _context.Remove(camera);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Camera removed from database.";
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            TempData["Error"] = "Could not remove camera.";
+        }
+        return RedirectToAction(nameof(Index));
+    }
+
+    public async Task<IActionResult> EditCamera(Guid id)
+    {
+        var camera = await _context.Camera.FindAsync(id);
+        if (camera == null)
+            return NotFound();
+        
+        await LoadServersAsync();
+        return View(camera);
+    }
+
+    
+    //edit the camera
+    [HttpPost]
+    public async Task<IActionResult> EditCamera(Guid id, Camera camera)
+    {
+        if (!ModelState.IsValid) // bad input, show the form again
+        {
+            await LoadServersAsync();
+            return View(camera);
+        }
+        
+        var existingCamera = await _context.Camera.FindAsync(id); // load row EF will track
+        if (existingCamera == null)
+            return NotFound();
+        
+        // duplicate check, skip this cameras own row
+        if (await _context.Camera.AnyAsync(c => c.Host == camera.Host && c.Id != id))
+        {
+            TempData["Error"] = "Another camera already uses that host.";
+            await LoadServersAsync();
+            return View(camera);
+        }
+        // copy the edited values onto the tracked object
+        // CreatedAt is left alone so we keep the original date
+        existingCamera.Name          = camera.Name;
+        existingCamera.Host          = camera.Host;
+        existingCamera.Port          = camera.Port;
+        existingCamera.Username      = camera.Username;
+        existingCamera.Manufacturer  = camera.Manufacturer;
+        existingCamera.Path          = ManufacturerTable.DefaultRtspPaths
+            .GetValueOrDefault(camera.Manufacturer ?? "", "/Streaming/Channels/101");
+        existingCamera.RetentionDays = camera.RetentionDays;
+        existingCamera.ServerId      = camera.ServerId;
+        existingCamera.IsEnabled     = camera.IsEnabled;
+
+        if (!string.IsNullOrEmpty(camera.Password))
+            existingCamera.Password = camera.Password;
+        
+        // lets save everything
+        await _context.SaveChangesAsync();
+        TempData["Success"] = "Camera edited successfully!";
+        return RedirectToAction(nameof(Index));
+    }
+    
+
+    [HttpPost]
+    public async Task<IActionResult> EditRtsp(Camera camera)
+    {
+        // if (ModelState.IsValid) { } we dont need this for now
+        
+        await LoadServersAsync();
+        _context.Camera.Update(camera);
+        await _context.SaveChangesAsync();
+        TempData["Success"] = "Camera edited successfully!";
+        
+        return RedirectToAction(nameof(Index));
+    }
+    
+    // edit cameras that were added via RTSP link
+    public async Task<IActionResult> EditRtsp(Guid id)
+    {
+        await LoadServersAsync();
+        var camera = await _context.Camera.FindAsync(id);
+        if (camera == null)
+        {
+            TempData["Error"] = "Could not find camera.";
+            return NotFound();
+        }
+        return View(camera);
+    }
+
     /***********************************************************************
      * Onvif library discovery method:
      *
      *
      *
-     * 
+     *
      *
      ************************************************************************/
 
@@ -252,10 +354,10 @@ public class CameraController : Controller
         
         var uri = new Uri(rtspUrl);
         var userInfo = uri.UserInfo.Split(':');
-            
+
         var camera = new Camera
         {
-            IsOnvif =  true,
+            IsOnvif = true,
             Name = uri.Host,
             RtspUrl = rtspUrl,
             Scheme = uri.Scheme,
@@ -265,80 +367,13 @@ public class CameraController : Controller
             Username = username,
             Password = password,
             IsEnabled = true,
-            CreatedAt = DateTime.Now,
-                
+            CreatedAt = DateTime.Now
         };
             
         _context.Camera.Add(camera);
         await _context.SaveChangesAsync();
         return Ok();
     }
-
-    
-    
-    
-    // delete the camera
-    public async Task<IActionResult> RemoveCamera(Guid id)
-    {
-        try
-        {
-            var camera = await _context.Camera.FindAsync(id);
-            if (camera == null)
-            {
-                TempData["Error"] = "Nothing to delete!";
-                return NotFound();
-            }
-            _context.Remove(camera);
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Camera removed from database.";
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            TempData["Error"] = "Could not remove camera.";
-        }
-        return RedirectToAction(nameof(Index));
-    }
-
-    
-    //edit the camera
-    public async Task<IActionResult> EditCamera(Guid id)
-    {
-        var camera = await _context.Camera.FindAsync(id);
-        if (camera == null)
-        {
-            TempData["Error"] = "Could not find camera.";
-            return NotFound();
-        }
-
-        return View(camera);
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> EditRtsp(Camera camera)
-    {
-        // if (ModelState.IsValid) { } we dont need this for now
-        
-
-        _context.Camera.Update(camera);
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Camera edited successfully!";
-        
-        return RedirectToAction(nameof(Index));
-    }
-    
-    // edit cameras that were added via RTSP link
-    public async Task<IActionResult> EditRtsp(Guid id)
-    {
-        var camera = await _context.Camera.FindAsync(id);
-        if (camera == null)
-        {
-            TempData["Error"] = "Could not find camera.";
-            return NotFound();
-        }
-        return View(camera);
-    }
-
 
     
     
@@ -358,17 +393,15 @@ public class CameraController : Controller
         
         if (camera.IsEnabled)
         {
-            
             stream.StreamDataTest(camera.RtspUrl, camera.Id);
             SharedData.ActiveStreams[camera.Name] = streamId;
-            
             
             var data = SharedData.ListStreams();
             Console.WriteLine(data);
             connectionTimer.Stop();
         }
-        // set a timer for 9 seconds...10 seems excessive
-        else if (connectionTimer.ElapsedMilliseconds > 9000)
+        // new timer - 12 sec
+        else if (connectionTimer.ElapsedMilliseconds > 12000)
         {
             TempData["ConnectFail"] = $"Could not reach {camera.Host}. " + "Please check network connection or " + "try the built in ping tool.";
         }
@@ -381,7 +414,6 @@ public class CameraController : Controller
 
         return RedirectToAction(nameof(LiveView), new { id = id });
     }
-    
     
     /***********************************************************************
      * Stream via ONVIF discovered cameras. First we create an authorize
@@ -407,8 +439,8 @@ public class CameraController : Controller
             Console.WriteLine(data);
             connectionTimer.Stop();
         }
-        // set a timer for 9 seconds...10 seems excessive
-        else if (connectionTimer.ElapsedMilliseconds > 9000)
+        // new timer- 12 secs
+        else if (connectionTimer.ElapsedMilliseconds > 12000)
         {
             TempData["ConnectFail"] = $"Could not reach {camera.Host}. " + "Please check network connection or " + "try the built in ping tool.";
         }
@@ -428,7 +460,7 @@ public class CameraController : Controller
      * we put together a camera URL from the camera db objects
      ************************************************************************/
     
-    public async Task < IActionResult> OpenCameraObjectSession(Guid id)
+    public async Task<IActionResult> OpenCameraObjectSession(Guid id)
     {
         var camera = _context.Camera.Find(id);
         var stream = new StreamVideo();
