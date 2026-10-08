@@ -33,8 +33,9 @@ public class DevicePingTools
         {
             Console.WriteLine($"{reply.RoundtripTime} ms");
             Console.WriteLine($"Requested Address: {reply.Address} ");
-            Console.WriteLine($"Time to live {0}", reply.Options.Ttl);
+            Console.WriteLine($"Time to live: {reply.Options!.Ttl}");
             Console.WriteLine($"Status Code: {reply.Status}");
+            Console.WriteLine("\n");
         }
 
         return true;
@@ -47,7 +48,7 @@ public class DevicePingTools
         
         var goodPing = new List<string>();
 
-        for (int i = 0; i <= 254; i++)
+        for (int i = 1; i <= 254; i++)
         {
             var ip = $"{subnet}.{i}";
             try
@@ -55,8 +56,12 @@ public class DevicePingTools
                 var reply = await new Ping().SendPingAsync(ip, 600);
                 if (reply.Status == IPStatus.Success)
                 {
-                    Console.WriteLine($"Alive: {ip}");
                     goodPing.Add($"{ip} is currently online");
+                    goodPing.Add($"{reply.RoundtripTime} ms");
+                    goodPing.Add($"Requested Address: {reply.Address} ");
+                    goodPing.Add($"Time to live: {reply.Options!.Ttl}");
+                    goodPing.Add($"Status Code: {reply.Status}");
+                    goodPing.Add("\n");
                 }
                 else
                 {
@@ -67,9 +72,7 @@ public class DevicePingTools
             {
                 Console.WriteLine(e.ToString());
             }
-
         }
-        Console.WriteLine($"Current amount of pings is {goodPing.Count}.");
         
         return goodPing;
     }
@@ -107,6 +110,7 @@ public class DevicePingTools
         }
         
         byte[]? mac = result.GetPhysicalAddress().GetAddressBytes();
+        
         if (mac != null) 
         {
             StringBuilder macAddress = new StringBuilder();

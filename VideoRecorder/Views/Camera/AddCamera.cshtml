@@ -23,7 +23,7 @@
     </div>
 
     @* asp-action= "AddCamera" tells the form to POST to /Camera/Create *@
-    <form asp-action="AddCamera" autocomplete="off">
+    <form asp-action="AddCamera" id="cameraForm" autocomplete="off">
 
         @* Name field *@
         <div class="mb-3 ">
@@ -115,6 +115,8 @@
             onclick="showPing()"
             class="btn btn-lg btn-ffx ">Ping
         </a>
+        
+        <a onclick="testCamera()" class="btn btn-lg btn-ffx">Test</a>
 
         <a
             onclick=""
@@ -174,5 +176,29 @@ function showPing() {
             window.location.href = '/Camera/PingAddress?ip=' + result.value;
         }
     })
+}
+
+
+
+/****************************************************************
+* Grab the form, package every fields current value without saving
+* Post that to new action in the background
+* Turn reply into an object with ok and message
+* *************************************************************** */
+async function testCamera() {
+    const form = document.getElementById('cameraForm');
+    const response = await fetch('/Camera/TestCamera', {
+        method: 'POST',
+        body: new FormData(form)
+    });
+    const result = await response.json();
+    
+    Swal.fire({
+        icon: result.ok ? 'success' : 'error',
+        title: result.ok ? 'Camera responded' : 'Failure',
+        text: result.message,
+        background: '1a1a2e',
+        color: '#7541d9'
+    });
 }
 </script>

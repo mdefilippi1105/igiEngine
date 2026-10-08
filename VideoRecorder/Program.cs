@@ -32,6 +32,8 @@ using VideoRecorder.Services;
     //DONE: NOT NEEDED discovered devices: show mac address
     //DONE: extend timeout duration for live views
     //DONE: Onvif connection issues, 404-unauthorized
+    //DONE: download all the bootstrap files locally 
+    //DONE: servers not showing up in httpGET pages
     //TODO: Convert comments to <param> style
     //TODO: program crashes when saving camera with an empty field
     //TODO: create a default admin username built - in
@@ -44,6 +46,7 @@ using VideoRecorder.Services;
     //TODO: make confirm buttons on sweetalert consistent
     //TODO: consider streaming the video from MTX relay vs the cam itself
     //TODO: arp scanner hangs up on "please wait"
+    
     
 
 

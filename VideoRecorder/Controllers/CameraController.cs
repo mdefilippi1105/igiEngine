@@ -45,6 +45,7 @@ public class CameraController : Controller
         _recording = recording;
     }
     
+    
     /***************************************************************************
     * this is the method that runs when someone visits /camera
     * async means it can wait for db without freezing app
@@ -84,11 +85,12 @@ public class CameraController : Controller
      * AddCamera() is full manual adding
      **************************************************************************/
     
-    public IActionResult Create()
+    public async Task<IActionResult >Create()
     {
+        await LoadServersAsync(); // have to refill the ViewBag - it doesnt survive the POST
+
         return View(); //show the cshtml
     }
-    
     
     [HttpPost]
     public async Task<IActionResult> Create(Camera camera)
@@ -123,36 +125,9 @@ public class CameraController : Controller
         return View(camera);
     }
     
-    /*************************************************************************
-     * This is extremely important. Using the UriBuilder we can parse data
-     * instead of having to do this manually, and having to hardcode RTSP
-     * URLs in manually
-     **************************************************************************/
-    
-    private string BuildAuthUri(string streamUri, string user, string password)
-    {
-        var build = new UriBuilder(streamUri); // parse the URI
-        build.UserName = Uri.EscapeDataString(user); //set the user/pass
-        build.Password = Uri.EscapeDataString(password);
-        return build.Uri.AbsoluteUri;       // return rtsp://user:pass@192.168.0.129/onvif-media/....
-    }
 
     
-    /*************************************************************************
-     * Add camera manually
-     * LoadServersAsync() loads up the available recording servers
-     * so that they are viewable when adding or editing a camera.
-     *
-     **************************************************************************/
-   
-    private async Task LoadServersAsync() =>
-        ViewBag.Servers = new SelectList(
-            await _context.Server
-                .Where(s => s.IsEnabled)
-                .OrderBy(s => s.Name)
-                .ToListAsync(),
-            "Id",
-            "Name");
+
     
     
     [HttpGet]
@@ -167,9 +142,13 @@ public class CameraController : Controller
     {
         if (ManufacturerTable.DefaultRtspPaths == null!)
             camera.Path = "/Streaming/Channels/101";
-        
-        if (ManufacturerTable.DefaultRtspPaths!.ContainsKey(camera.Manufacturer!))
+
+        if (!string.IsNullOrEmpty(camera.Manufacturer) &&
+            ManufacturerTable.DefaultRtspPaths.ContainsKey(camera.Manufacturer))
+        {
             camera.Path = ManufacturerTable.DefaultRtspPaths[camera.Manufacturer!];
+        }
+                
         
         // guard check - we do not want to add duplicates while saving.
         if (await _context.Camera.AnyAsync(c => c.Host == camera.Host))
@@ -606,7 +585,29 @@ public class CameraController : Controller
         return View();
     }
     
- 
+    /************************************************************************
+     *  Test method to probe rtsp addresses when manually adding a camera
+     ************************************************************************/
+    [HttpPost]
+    public async Task<IActionResult> TestCamera(Camera camera)
+    {
+        if (string.IsNullOrEmpty(camera.Host)) //stop early when theres no ip to test
+            return Json(new { ok = false, message = "Enter an IP address first." });
+
+        // fall back to the default when the port box is e,pty
+        string path = ManufacturerTable.DefaultRtspPaths.GetValueOrDefault(camera.Manufacturer ?? "", "");
+
+        try
+        {
+            int code = await RtspTester.DescribeAsync(camera.Host, camera.Port ?? 554, path);
+            return Json(new { ok = code == 200, message = $"Camera answered {code}" });
+        }
+        catch (Exception)
+        {
+            return Json(new { ok = false, message = "Could not reach the camera." });
+        }
+        
+    }
     
     /************************************************************************
      *  Ping device and ping subnet
@@ -745,7 +746,6 @@ public class CameraController : Controller
         return RedirectToAction("Index");
     }
     
-    
     // this page renders the group assignments.
     public IActionResult ViewGroupAssignments(int? groupId)
     {
@@ -763,6 +763,33 @@ public class CameraController : Controller
         return View();
     }
     
+     /*************************************************************************
+     * This is extremely important. Using the UriBuilder we can parse data
+     * instead of having to do this manually, and having to hardcode RTSP
+     * URLs in manually
+     **************************************************************************/
+    private string BuildAuthUri(string streamUri, string user, string password)
+    {
+        var build = new UriBuilder(streamUri); // parse the URI
+        build.UserName = Uri.EscapeDataString(user); //set the user/pass
+        build.Password = Uri.EscapeDataString(password);
+        return build.Uri.AbsoluteUri;       // return rtsp://user:pass@192.168.0.129/onvif-media/....
+    }
+    
+    /*************************************************************************
+     * Add camera manually
+     * LoadServersAsync() loads up the available recording servers
+     * so that they are viewable when adding or editing a camera.
+     *
+     **************************************************************************/
+    private async Task LoadServersAsync() =>
+        ViewBag.Servers = new SelectList(
+            await _context.Server
+                .Where(s => s.IsEnabled)
+                .OrderBy(s => s.Name)
+                .ToListAsync(),
+            "Id",
+            "Name");
     
 }    
 
