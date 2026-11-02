@@ -38,36 +38,61 @@
     if (Hls.isSupported()) {
         const video = document.getElementById("video");
         video.removeAttribute('src');
-        
-        const hls = new Hls({
-            manifestLoadingMaxRetry: 10,
-            manifestLoadingRetryDelay: 2000,
-            manifestLoadingMaxRetryTimeout: 12000,
-        });
-        setTimeout(function() {
-            hls.loadSource('http://localhost:8888/live/@ViewData["CameraId"]/index.m3u8');
-            hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                video.play();
-            });
-            
-            hls.on(Hls.Events.ERROR, function(event, data) {
-                if (data.details === Hls.ErrorDetails.MANIFEST_LOAD_ERROR ||
-                    data.details === Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT) {
-                    console.log('Retrying stream... attempt: ' + data.context.retryCount);
-                }
+        const url = 'http://localhost:8888/live/@ViewData["CameraId"]/index.m3u8';
+        @* const hls = new Hls(); *@
+        const hls = new Hls({ lowLatencyMode: false });
 
-                if (data.fatal) {
-                    Swal.fire({
-                        title: 'Stream unavailable.',
-                        text: 'Could not connect to camera.',
-                        icon: 'error',
-                        background: '#1a1a2e',
-                        color: '#ffffff'
-                    });
-                }
+        function showStreamError() {
+            Swal.fire({
+                title: 'Stream unavailable.',
+                text: 'Could not connect to camera.',
+                icon: 'error',
+                background: '#1a1a2e',
+                color: '#ffffff'
             });
-        }, 12000);
+        }
+        function showError() {
+            Swal.fire({
+                title: 'Stream unavailable.',
+                text: 'Could not connect to camera.',
+                icon: 'error',
+                background: '#1a1a2e',
+                color: '#ffffff'
+            });
+        }
+        function showError() {
+            Swal.fire({
+                title: 'Stream unavailable.',
+                text: 'Could not connect to camera.',
+                icon: 'error',
+                background: '#1a1a2e',
+                color: '#ffffff'
+            });
+        }
+        
+        async function waitForStream() {
+            for (let i = 0; i < 40; i++) { // try for 20s
+                const res = await fetch(url).catch(() => null); //null if the request itself fails
+                if (res && res.ok) return true; // 200 means the playlist exists
+                await new Promise(r => setTimeout(r, 500)); // wait half a second, then retry
+            }
+            return false; // give up
+        }
+
+        waitForStream().then(ready => {
+            if (!ready) return showError();
+            
+            hls.loadSource(url);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+            hls.on(Hls.Events.ERROR, (event, data) => {
+                console.log('HLS error:', data.type, data.details, data.fatal);
+                if (!data.fatal) return;
+                if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
+                else if (data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad();
+                else showError();
+            });
+        });
     }
     
 </script>
@@ -84,3 +109,43 @@
             navigator.sendBeacon("/Camera/DestroyStream/" + cameraId);
         });
 </script>
+
+
+@* <script> *@
+@*      *@
+@*     if (Hls.isSupported()) { *@
+@*         const video = document.getElementById("video"); *@
+@*         video.removeAttribute('src'); *@
+@*          *@
+@*         const hls = new Hls({ *@
+@*             manifestLoadingMaxRetry: 10, *@
+@*             manifestLoadingRetryDelay: 2000, *@
+@*             manifestLoadingMaxRetryTimeout: 12000, *@
+@*         }); *@
+@*         setTimeout(function() { *@
+@*             hls.loadSource('http://localhost:8888/live/@ViewData["CameraId"]/index.m3u8'); *@
+@*             hls.attachMedia(video); *@
+@*             hls.on(Hls.Events.MANIFEST_PARSED, function() { *@
+@*                 video.play(); *@
+@*             }); *@
+@*              *@
+@*             hls.on(Hls.Events.ERROR, function(event, data) { *@
+@*                 if (data.details === Hls.ErrorDetails.MANIFEST_LOAD_ERROR || *@
+@*                     data.details === Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT) { *@
+@*                     console.log('Retrying stream... attempt: ' + data.context.retryCount); *@
+@*                 } *@
+@* *@
+@*                 if (data.fatal) { *@
+@*                     Swal.fire({ *@
+@*                         title: 'Stream unavailable.', *@
+@*                         text: 'Could not connect to camera.', *@
+@*                         icon: 'error', *@
+@*                         background: '#1a1a2e', *@
+@*                         color: '#ffffff' *@
+@*                     }); *@
+@*                 } *@
+@*             }); *@
+@*         }, 12000); *@
+@*     } *@
+@*      *@
+@* </script> *@

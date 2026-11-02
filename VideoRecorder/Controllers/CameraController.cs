@@ -672,26 +672,18 @@ public class CameraController : Controller
      ************************************************************************/
 
     [HttpPost]
-    public async Task <IActionResult> DetectDevicesOnSubnet([FromBody] ScanRequest request)
+    public async Task <IActionResult> DetectDevicesOnSubnet(string ip)
     {
       var scanner = new DevicePingTools();
-      var results =   await scanner.ScanSubnet(request.Ip);
+      var results =   await scanner.ScanSubnet(ip);
       return Json(results);
     }
-
-    public class ScanRequest
-    {
-        public string Ip { get; set; }
-    }
-    
-    
     
     /************************************************************************
      * Group Assignment Methods
      * The basic flow is: pick a camera, pick a group, submit
      * 2 Assign() functions. one for get, one for post. post is labeled
      ************************************************************************/
-
     public IActionResult Assign()
     {
         // we only use SelectList for populating <select> from a database table

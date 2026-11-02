@@ -77,6 +77,8 @@ public class Camera
     
     public Guid? ServerId { get; set; }
     public Server? Server { get; set; }
+    
+    
 
 
 }

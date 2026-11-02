@@ -55,9 +55,7 @@ public class AltOnvifDiscovery
             {
                 Console.WriteLine($"Error: {ex.Message}"); ;
             }
-
             Console.WriteLine($"TOTAL: {OnvifUriList?.Count}");
-            
         }
     }
 

@@ -14,6 +14,25 @@ public class RecordingService
     private readonly string _ffmpegPath =
         "/Users/michaeldefilippi/RiderProjects/VideoRecorder/VideoRecorder/ThirdParty/ffmpeg";
     
+    /*********************************************
+     * BuildUrl() - if the camera has been added via
+     * rtsp or onvif discovery, otherwise
+     * user:pass@host.path will not work
+     **********************************************/
+    private static string? BuildUrl(Camera camera)
+    {
+        if ((camera.RtspManuallyAdded || camera.IsOnvif) && !string.IsNullOrWhiteSpace(camera.RtspUrl))
+            return camera.RtspUrl;
+
+        if (string.IsNullOrEmpty(camera.Host))
+            return null;
+        
+        return $"rtsp://{camera!.Username}:{camera.Password}@{camera.Host}{camera.Path}";
+
+
+    }
+    
+    
 
     /*************************************************
      * First, grab the camera from the db
@@ -29,8 +48,11 @@ public class RecordingService
      * 5. {dir}/date and time format
      ***************************************************/
     
-    public void Start(Camera camera, string cameraUrl)
+    public void Start(Camera camera)
     {
+        var cameraUrl = BuildUrl(camera);
+        if (cameraUrl == null)
+            return;
         
         // check for stale processes before starting a fresh one
         if (_recordings.TryGetValue(camera.Id, out var existingProcess))
@@ -130,9 +152,7 @@ public class RecordingService
         // if entry alive - ffmpeg running, true
         _recordings.TryGetValue(camera.Id, out var process);
         
-        var processIsAlive = process is not null && !process.HasExited;
-        
-        camera.IsRecording = processIsAlive;
+        camera.IsRecording = process is not null && !process.HasExited; // bool
         
         var recordingAllowed = camera.UserToggledRecording && camera.IsOnline && camera.IsEnabled;
         
@@ -146,9 +166,7 @@ public class RecordingService
         //cam online, enabled and toggle button clicked, but NOT currently recording
         if (recordingAllowed && !camera.IsRecording)
         {
-            var url = $"rtsp://{camera!.Username}:{camera.Password}@{camera.Host}{camera.Path}";
-            Start(camera, url);
-            
+            Start(camera);
         }
         
         // if any 3 of the "allowed" parameters are not satisfied

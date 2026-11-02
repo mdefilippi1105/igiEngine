@@ -594,23 +594,13 @@
     <script>
         async function startScan() {
             const ip = document.getElementById('ipInput').value;
-            
             document.getElementById('scanSpinner').classList.remove('d-none'); // show the spinner
             document.getElementById('subnetResults').innerHTML = '';
-
             try {
-                
-                const response = await fetch('/Camera/DetectDevicesOnSubnet/', { // get the ping results back
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ ip: ip })
-                });
-
+                const response = await fetch('/Camera/DetectDevicesOnSubnet?ip=' + ip, {method: 'POST'} );
                 const results = await response.json();
-
-
                 let html ='';
-                for(let i =0; i < results.length; i++){
+                for(let i =0; i < results.length; i++) {
                     html += '<p style="color: lime;">' + results[i] + '</p>' // make text green
                 }
                 document.getElementById('scanSpinner').classList.add('d-none'); // hide spinner
@@ -623,15 +613,12 @@
                 }
             } catch (error) {
                 document.getElementById('subnetResults').innerHTML = error.message;
-                
             }
-            
             // event listener for close button. clear the List<>
             document.getElementById('subnetModal').addEventListener('hidden.bs.modal', function () {
                 document.getElementById('subnetResults').innerHTML = '';
                 document.getElementById('subnetModal').classList.remove('d-none');
             });
-
         }
 
     </script>

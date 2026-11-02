@@ -35,7 +35,9 @@ public class RecordingController : Controller
         var camera = await _context.Camera
             .Include(c => c.Server)
             .FirstOrDefaultAsync(c => c.Id == cameraId);
-        var url = $"rtsp://{camera!.Username}:{camera.Password}@{camera.Host}{camera.Path}";
+
+        
+            var url = $"rtsp://{camera!.Username}:{camera.Password}@{camera.Host}{camera.Path}";
         
         // guard checks
         if (camera! == null || !camera.IsEnabled || !camera.IsOnline)
@@ -43,7 +45,7 @@ public class RecordingController : Controller
         
         _logger.LogInformation("Starting recording for {CameraName}", camera.Name);
         
-        _recording.Start(camera, url);
+        _recording.Start(camera);
         
         return Ok();
 

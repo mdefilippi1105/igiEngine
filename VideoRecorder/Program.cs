@@ -34,8 +34,10 @@ using VideoRecorder.Services;
     //DONE: Onvif connection issues, 404-unauthorized
     //DONE: download all the bootstrap files locally 
     //DONE: servers not showing up in httpGET pages
+    //DONE: program crashes when saving camera with an empty field
+    //DONE: arp scanner hangs up on "please wait"
+    //TODO: in the black space, put some kind of analytic w/ corresponding info per page
     //TODO: Convert comments to <param> style
-    //TODO: program crashes when saving camera with an empty field
     //TODO: create a default admin username built - in
     //TODO: find way to obscure username/pass in rtsp url
     //TODO: find way to obscure username/pass in ffmpeg stderr
@@ -45,10 +47,7 @@ using VideoRecorder.Services;
     //TODO: allow an option for pop-out window when viewing live - single or multiviews
     //TODO: make confirm buttons on sweetalert consistent
     //TODO: consider streaming the video from MTX relay vs the cam itself
-    //TODO: arp scanner hangs up on "please wait"
     
-    
-
 
     // the first thing we want to do is to begin MediaMtx
     StreamVideo stream = new StreamVideo();

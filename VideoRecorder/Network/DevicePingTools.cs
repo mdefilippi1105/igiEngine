@@ -1,6 +1,7 @@
 using System.Buffers;
 using System.Diagnostics;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 
 namespace VideoRecorder.Network;
@@ -10,13 +11,36 @@ using System.Threading.Tasks;
 using System.Text;
 using System.Xml;
 
-
+/*******************************************************************************************
+ * This class holds various network tools
+ ********************************************************************************************/
 public class DevicePingTools
 {
     private readonly string _hostName = Dns.GetHostName();
     private IPAddress[] _addresses = Dns.GetHostAddresses(Dns.GetHostName());
     private string? ip;
     
+    /*******************************************************************************************
+     * CheckPort() - use a TCP client to check if a port is open
+     ********************************************************************************************/
+    private static async Task<bool> CheckPort(string ip, int port)
+    {
+        using var tcp = new TcpClient();
+        using var cancelTokenSource = new CancellationTokenSource(500);
+        try
+        {
+            await tcp.ConnectAsync(ip, port, cancelTokenSource.Token);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    
+    /*******************************************************************************************
+     * RunPing() - run a generic ping
+     ********************************************************************************************/
     //ping the retrieved ip address
     public bool RunPing(string address)
     {
@@ -40,50 +64,67 @@ public class DevicePingTools
 
         return true;
     }
-    
-    public async Task <List<string>> ScanSubnet(string hostName)
+
+    /*******************************************************************************************
+     * PingOneDevice() - single ping to single address wrapped in a try/catch
+     ********************************************************************************************/
+    private static async Task<string?> PingOneDevice(string ip)
+    {
+        try
+        {
+            using var ping = new Ping();
+            var reply = await ping.SendPingAsync(ip, 2000);
+            if (reply.Status == IPStatus.Success)
+                // builds 1 line per device or null for no answer
+                return $"{ip} - {reply.RoundtripTime} ms, TTL {reply.Options?.Ttl} reported as {reply.Status}";
+        }
+        catch (PingException e)
+        {
+            Console.WriteLine(e.Message);
+        }
+
+        if (await CheckPort(ip, 80) || await CheckPort(ip, 554))
+            return $"{ip} no ping reply, but port 80 or 554 is open.";
+        
+        return null;
+    }
+
+    /*******************************************************************************************
+     * ScanSubnet() - run PingOne as a list of tasks
+     * The old way ran a ping sequentially in a for loop
+     * We can blast a bunch at once, wait for completion, then display
+     ********************************************************************************************/
+    public async Task<List<string>> ScanSubnet(string hostName)
     {
         string[] parts = hostName.Split('.');
         var subnet = string.Join(".", parts[0], parts[1], parts[2]); // eg 255.255.255.0
-        
         var goodPing = new List<string>();
+        var pingTasks = new List<Task<string?>>();
 
         for (int i = 1; i <= 254; i++)
-        {
-            var ip = $"{subnet}.{i}";
-            try
-            {
-                var reply = await new Ping().SendPingAsync(ip, 600);
-                if (reply.Status == IPStatus.Success)
-                {
-                    goodPing.Add($"{ip} is currently online");
-                    goodPing.Add($"{reply.RoundtripTime} ms");
-                    goodPing.Add($"Requested Address: {reply.Address} ");
-                    goodPing.Add($"Time to live: {reply.Options!.Ttl}");
-                    goodPing.Add($"Status Code: {reply.Status}");
-                    goodPing.Add("\n");
-                }
-                else
-                {
-                    Console.WriteLine($"Failed: {ip}");
-                }
-            }
-            catch (PingException e)
-            {
-                Console.WriteLine(e.ToString());
-            }
-        }
+            pingTasks.Add(PingOneDevice($"{subnet}.{i}"));
         
+        string?[] results = await Task.WhenAll(pingTasks);
+        
+        foreach (var result in results)
+            if (result != null)
+                goodPing.Add(result);
+       
         return goodPing;
     }
     
     
     
     
+    
+    
+    
+    
     /*
+     *
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      * how this works :
-     * start with empty string, loop through 
+     * start with empty string, loop through
      * every network interface on the machine
      * AA - BB - CC - DD - EE - FF
      * ↑    ↑    ↑    ↑    ↑    ↑
