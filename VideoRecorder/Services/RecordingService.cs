@@ -15,8 +15,8 @@ public class RecordingService
         "/Users/michaeldefilippi/RiderProjects/VideoRecorder/VideoRecorder/ThirdParty/ffmpeg";
     
     /*********************************************
-     * BuildUrl() - if the camera has been added via
-     * rtsp or onvif discovery, otherwise
+     * BuildUrl() - if the camera has been added
+     * via rtsp or onvif discovery, otherwise
      * user:pass@host.path will not work
      **********************************************/
     private static string? BuildUrl(Camera camera)
@@ -28,14 +28,12 @@ public class RecordingService
             return null;
         
         return $"rtsp://{camera!.Username}:{camera.Password}@{camera.Host}{camera.Path}";
-
-
     }
     
     
 
     /*************************************************
-     * First, grab the camera from the db
+     * Start()- First, grab the camera from the db
      * Based on the server OS, it will write to the selected drive path
      *
      * ffmpeg args explained:
@@ -47,7 +45,6 @@ public class RecordingService
      * so files stay playable even if the service dies mid-segment.
      * 5. {dir}/date and time format
      ***************************************************/
-    
     public void Start(Camera camera)
     {
         var cameraUrl = BuildUrl(camera);

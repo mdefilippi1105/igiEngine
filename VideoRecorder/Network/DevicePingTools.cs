@@ -19,7 +19,8 @@ public class DevicePingTools
     private readonly string _hostName = Dns.GetHostName();
     private IPAddress[] _addresses = Dns.GetHostAddresses(Dns.GetHostName());
     private string? ip;
-    
+
+
     /*******************************************************************************************
      * CheckPort() - use a TCP client to check if a port is open
      ********************************************************************************************/
@@ -37,14 +38,14 @@ public class DevicePingTools
             return false;
         }
     }
-    
+
     /*******************************************************************************************
      * RunPing() - run a generic ping
      ********************************************************************************************/
     //ping the retrieved ip address
     public bool RunPing(string address)
     {
-        
+
         var ping = new Ping();
         var options = new PingOptions();
         // use default 128 ttl
@@ -74,9 +75,11 @@ public class DevicePingTools
         {
             using var ping = new Ping();
             var reply = await ping.SendPingAsync(ip, 2000);
+            var hostName = await GetHostnameAsync(reply.Address);
+
             if (reply.Status == IPStatus.Success)
                 // builds 1 line per device or null for no answer
-                return $"{ip} - {reply.RoundtripTime} ms, TTL {reply.Options?.Ttl} reported as {reply.Status}";
+                return $"{ip} : {hostName} - {reply.RoundtripTime} ms";
         }
         catch (PingException e)
         {
@@ -85,7 +88,7 @@ public class DevicePingTools
 
         if (await CheckPort(ip, 80) || await CheckPort(ip, 554))
             return $"{ip} no ping reply, but port 80 or 554 is open.";
-        
+
         return null;
     }
 
@@ -103,23 +106,23 @@ public class DevicePingTools
 
         for (int i = 1; i <= 254; i++)
             pingTasks.Add(PingOneDevice($"{subnet}.{i}"));
-        
+
         string?[] results = await Task.WhenAll(pingTasks);
-        
+
         foreach (var result in results)
             if (result != null)
                 goodPing.Add(result);
-       
+
         return goodPing;
     }
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
     /*
      *
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -133,13 +136,13 @@ public class DevicePingTools
      * if it's not the last byte, add a " : "
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      */
-    
+
     public static String GetInterfaces()
     {
         NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
         // create a byte array called mac address
 
-        NetworkInterface result  = null;
+        NetworkInterface result = null;
         foreach (NetworkInterface iface in interfaces)
         {
             if (iface.OperationalStatus == OperationalStatus.Up &&
@@ -149,27 +152,29 @@ public class DevicePingTools
                 break;
             }
         }
-        
+
         byte[]? mac = result.GetPhysicalAddress().GetAddressBytes();
-        
-        if (mac != null) 
+
+        if (mac != null)
         {
             StringBuilder macAddress = new StringBuilder();
-            for (int i = 0; i < mac!.Length; i++) 
+            for (int i = 0; i < mac!.Length; i++)
             {
                 macAddress.Append(String.Format("{0:x2}", mac[i]));
-                
-                if (i < mac.Length - 1) 
+
+                if (i < mac.Length - 1)
                 {
                     macAddress.Append(":");
                 }
             }
+
             Console.WriteLine(macAddress);
             return macAddress.ToString();
-        } 
+        }
+
         return "";
     }
-    
+
     public static List<string> AddressResolution()
     {
         var proc = new Process();
@@ -180,7 +185,7 @@ public class DevicePingTools
         proc.StartInfo.RedirectStandardError = true;
         proc.Start();
         var output = proc.StandardOutput.ReadToEnd();
-        
+
         var items = new List<string>();
         foreach (var item in output.Split('\n'))
         {
@@ -189,6 +194,22 @@ public class DevicePingTools
                 items.Add(item.Trim());
             }
         }
+
         return items;
+    }
+
+    /*******************************************************************************************
+     * GetHostnameAsync() - get the dns name of the device
+     ********************************************************************************************/
+    static async Task<string?> GetHostnameAsync(IPAddress address)
+    {
+        try
+        {
+            return (await Dns.GetHostEntryAsync(address)).HostName;
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
     }
 }
