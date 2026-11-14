@@ -74,7 +74,7 @@ public class DevicePingTools
         try
         {
             using var ping = new Ping();
-            var reply = await ping.SendPingAsync(ip, 2000);
+            var reply = await ping.SendPingAsync(ip, 5000);
             var hostName = await GetHostnameAsync(reply.Address);
 
             if (reply.Status == IPStatus.Success)
@@ -110,9 +110,11 @@ public class DevicePingTools
         string?[] results = await Task.WhenAll(pingTasks);
 
         foreach (var result in results)
+        {
             if (result != null)
                 goodPing.Add(result);
-
+        }
+        
         return goodPing;
     }
 

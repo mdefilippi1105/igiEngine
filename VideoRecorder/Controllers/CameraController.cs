@@ -319,8 +319,13 @@ public class CameraController : Controller
         catch (Exception e)
         {
             Console.WriteLine(e);
-            return Json(e.Message);
-            return Json(new List<DiscoveryDevice>());
+            // return Json(e.Message);
+            return Json(new
+            {
+                ok = false,
+                error = e.Message, 
+                cameras = new List<object>() // failure -> add a blank list to prevent crash
+            });
         }
     }
     
@@ -670,7 +675,6 @@ public class CameraController : Controller
      * We need [FromBody] tells ASP.NET  to look in the body for
      * this value otherwise it's going to come in as null.
      ************************************************************************/
-
     [HttpPost]
     public async Task <IActionResult> DetectDevicesOnSubnet(string ip)
     {
@@ -724,7 +728,6 @@ public class CameraController : Controller
             TempData["Error"] = "Cannot be null. Please provide a valid name.";
             return RedirectToAction("Index");  
         }
-            
         
         _context.CameraGroup.Add(group);
         _context.SaveChanges();

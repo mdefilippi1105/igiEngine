@@ -440,7 +440,7 @@
             <div class="modal-content bg-dark text-white">
                 <div class="modal-header">
                     <h5 class="modal-title">Subnet Scan</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn btn-sm btn-ffx" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -459,8 +459,8 @@
                 <div class="modal-body" id="subnetResults">@* this is where the scan results go *@
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="startScan()">Scan</button>
+                    <button type="button" class="btn btn-sm btn-ffx" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-sm btn-ffx" onclick="startScan()">Scan</button>
                 </div>
             </div>
         </div>
@@ -655,22 +655,30 @@
             
             const username = document.getElementById('onvifUsername').value;
             const password = document.getElementById('onvifPassword').value;
-            document.getElementById('onvifResults').innerHTML = '<p>Scanning...please wait</p>';
+            const results = document.getElementById('onvifResults');
+            results.innerHTML = '<p>Scanning...please wait</p>';
             
-            const response = await fetch(`/Camera/Discover?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`); 
-            const devices = await response.json();
-            let html = '';
+            const response = await fetch(`/Camera/Discover?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
+            const data = await response.json(); // BEWARE: this can return an array or error string
             
-            if (devices.length === 0) {
-                html = '<p> No devices found.</p>';
+            if (!response.ok || !data.ok) { // added because it was rende
+                results.innerHTML = `<p>${data.error ?? 'Discovery failed.'}</p>`;
+                return;
+            }
+            const devices = data.cameras;
+            if (devices.length === 0) { 
+                results.innerHTML = '<p> No devices found.</p>';
+                return;
             }
             
+            let html = '';
             for (let i = 0; i < devices.length; i++) {
-                
                 // we're adding a save button if devices are found
                 // show the devices. button fires JS below, bind to save button
-                html += `<p>${devices[i]}</p><button type="button" class="btn btn-sm btn-ffx" onclick="saveDiscovered('${devices[i]}', this)">Save</button>`;            }
-            document.getElementById('onvifResults').innerHTML = html;
+                html += `<p>${devices[i]}</p>
+                         <button type="button" class="btn btn-sm btn-ffx" 
+                          onclick='saveDiscovered(${JSON.stringify(devices[i])}, this)'>Save</button>`;            }
+            results.innerHTML = html;
         }
     </script>
     
