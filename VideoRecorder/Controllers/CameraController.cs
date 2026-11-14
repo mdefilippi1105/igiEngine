@@ -312,9 +312,13 @@ public class CameraController : Controller
         {
             var discovery = new AltOnvifDiscovery();
             await discovery.DiscoverAsync(username, password);
-            
-            return Json(discovery.OnvifUriList);
-            
+
+            return Json(new
+            {
+                ok = true,
+                error = (string?)null,
+                cameras = discovery.OnvifUriList
+            });
         }
         catch (Exception e)
         {
@@ -323,7 +327,7 @@ public class CameraController : Controller
             return Json(new
             {
                 ok = false,
-                error = e.Message, 
+                error = e.Message,
                 cameras = new List<object>() // failure -> add a blank list to prevent crash
             });
         }
@@ -674,6 +678,7 @@ public class CameraController : Controller
      * Scanning subnet class. Converted from old Java Ping scanner :)
      * We need [FromBody] tells ASP.NET  to look in the body for
      * this value otherwise it's going to come in as null.
+     * IMPORTANT - IN MACOS MAKE SURE SETTINGS > PRIVACY > LOCAL NETWORK ON
      ************************************************************************/
     [HttpPost]
     public async Task <IActionResult> DetectDevicesOnSubnet(string ip)
